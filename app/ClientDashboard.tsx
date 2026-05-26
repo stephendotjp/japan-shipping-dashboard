@@ -20,9 +20,7 @@ interface Props {
 }
 
 function computeUSStatus(carriers: Record<string, CarrierData>): 'operational' | 'partial' | 'suspended' | 'unknown' {
-  const statuses = Object.values(carriers)
-    .filter(Boolean)
-    .map((c) => c!.usDestinationStatus);
+  const statuses = Object.values(carriers).filter(Boolean).map((c) => c!.usDestinationStatus);
   if (statuses.length === 0) return 'unknown';
   if (statuses.some((s) => s === 'suspended')) return 'suspended';
   if (statuses.some((s) => s === 'partial')) return 'partial';
@@ -44,46 +42,39 @@ function formatJST(iso: string | null): string {
   if (!iso) return 'Never';
   return new Date(iso).toLocaleString('en-US', {
     timeZone: 'Asia/Tokyo',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
+    month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
   }) + ' JST';
 }
 
+const CARRIER_KEYS = ['japanpost', 'fedex', 'ups', 'dhl'];
+
 export default function ClientDashboard({ initial }: Props) {
   const [data, setData] = useState<StatusResponse>(initial);
-  const [countdown, setCountdown] = useState('');
+  const [countdown, setCountdown] = useState('--:--:--');
   const [triggeredInitialScrape, setTriggeredInitialScrape] = useState(false);
 
   const fetchStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/status');
       if (res.ok) setData(await res.json());
-    } catch { /* retain existing data */ }
+    } catch { /* retain existing */ }
   }, []);
 
-  // Trigger initial scrape if no data
   useEffect(() => {
     if (triggeredInitialScrape) return;
     const hasNoData = Object.values(initial.carriers).every((c) => c === null);
     if (hasNoData) {
       setTriggeredInitialScrape(true);
-      fetch('/api/scrape', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_APP_URL ?? ''}` },
-      }).catch(() => {});
+      fetch('/api/admin/trigger', { method: 'POST' }).catch(() => {});
     }
   }, [initial.carriers, triggeredInitialScrape]);
 
-  // Poll every 5 minutes
   useEffect(() => {
     const interval = setInterval(fetchStatus, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [fetchStatus]);
 
-  // Countdown timer
   useEffect(() => {
     const tick = () => setCountdown(formatCountdown(data.nextUpdate));
     tick();
@@ -92,41 +83,78 @@ export default function ClientDashboard({ initial }: Props) {
   }, [data.nextUpdate]);
 
   const usStatus = computeUSStatus(data.carriers);
-  const CARRIER_KEYS = ['japanpost', 'fedex', 'ups', 'dhl'];
 
   return (
-    <div style={{ background: '#0a0f1e', minHeight: '100vh', color: '#fff', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: 20 }}>
-          <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.5px' }}>
-            Japan Shipping Status
-          </h1>
-          <div style={{ display: 'flex', gap: 24, marginTop: 8, fontSize: '0.8rem', color: '#888' }}>
-            <span>Last updated: {formatJST(data.lastUpdated)}</span>
-            <span>Next update in: <span style={{ color: '#4a9eff', fontVariantNumeric: 'tabular-nums' }}>{countdown}</span></span>
-          </div>
+    <div style={{
+      background: '#020812',
+      minHeight: '100vh',
+      color: '#fff',
+      fontFamily: '"Inter", "Segoe UI", system-ui, sans-serif',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 32px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(0,0,0,0.4)',
+        flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 10, height: 10, borderRadius: '50%',
+            background: '#ffd700',
+            boxShadow: '0 0 10px #ffd700',
+          }} />
+          <span style={{ fontSize: '1.3rem', fontWeight: 800, letterSpacing: '0.05em', color: '#e8f0ff' }}>
+            JAPAN SHIPPING STATUS
+          </span>
         </div>
+        <div style={{ display: 'flex', gap: 40, alignItems: 'center' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.7rem', color: '#445', letterSpacing: '0.08em', marginBottom: 2 }}>LAST UPDATED</div>
+            <div style={{ fontSize: '0.9rem', color: '#aabbcc', fontVariantNumeric: 'tabular-nums' }}>
+              {formatJST(data.lastUpdated)}
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.7rem', color: '#445', letterSpacing: '0.08em', marginBottom: 2 }}>NEXT UPDATE</div>
+            <div style={{ fontSize: '1.1rem', color: '#4a9eff', fontWeight: 700, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>
+              {countdown}
+            </div>
+          </div>
+          <a href="/admin" style={{ fontSize: '0.72rem', color: '#334', textDecoration: 'none', padding: '6px 12px', border: '1px solid #223', borderRadius: 6 }}>
+            Admin
+          </a>
+        </div>
+      </div>
 
-        {/* Globe */}
-        <div style={{ marginBottom: 24, borderRadius: 12, overflow: 'hidden' }}>
+      {/* Globe */}
+      <div style={{
+        flex: '1 1 0',
+        minHeight: 0,
+        padding: '12px 24px 8px',
+        display: 'flex',
+      }}>
+        <div style={{ width: '100%', borderRadius: 12, overflow: 'hidden' }}>
           <Globe usStatus={usStatus} />
         </div>
+      </div>
 
-        {/* Cards grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 16,
-        }}>
-          {CARRIER_KEYS.map((key) => (
-            <CarrierCard key={key} carrierKey={key} data={data.carriers[key] ?? null} />
-          ))}
-        </div>
-
-        <div style={{ marginTop: 24, textAlign: 'center', fontSize: '0.75rem', color: '#444' }}>
-          <a href="/admin" style={{ color: '#555', textDecoration: 'none' }}>Admin / Debug</a>
-        </div>
+      {/* Carrier cards — 4 in a row */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 12,
+        padding: '8px 24px 20px',
+        flexShrink: 0,
+      }}>
+        {CARRIER_KEYS.map((key) => (
+          <CarrierCard key={key} carrierKey={key} data={data.carriers[key] ?? null} />
+        ))}
       </div>
     </div>
   );

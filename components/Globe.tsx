@@ -6,85 +6,106 @@ interface GlobeProps {
   usStatus: 'operational' | 'partial' | 'suspended' | 'unknown';
 }
 
-// Simplified continent outlines as normalized [x, y] points (0–1)
-const CONTINENTS = {
-  northAmerica: [
-    [0.05, 0.15], [0.22, 0.1], [0.28, 0.18], [0.32, 0.25], [0.3, 0.38],
-    [0.22, 0.45], [0.18, 0.55], [0.12, 0.52], [0.08, 0.42], [0.05, 0.3],
-  ],
-  southAmerica: [
-    [0.22, 0.52], [0.3, 0.5], [0.34, 0.6], [0.3, 0.75], [0.24, 0.82],
-    [0.2, 0.75], [0.18, 0.62],
-  ],
-  europe: [
-    [0.44, 0.12], [0.52, 0.1], [0.56, 0.18], [0.54, 0.26], [0.48, 0.3],
-    [0.44, 0.25], [0.42, 0.18],
-  ],
-  africa: [
-    [0.46, 0.32], [0.54, 0.3], [0.58, 0.38], [0.56, 0.55], [0.52, 0.68],
-    [0.46, 0.65], [0.42, 0.52], [0.43, 0.38],
-  ],
-  asia: [
-    [0.54, 0.1], [0.72, 0.08], [0.8, 0.15], [0.82, 0.25], [0.78, 0.35],
-    [0.7, 0.4], [0.62, 0.42], [0.56, 0.38], [0.52, 0.28], [0.52, 0.18],
-  ],
-  australia: [
-    [0.72, 0.56], [0.82, 0.54], [0.86, 0.62], [0.82, 0.7], [0.74, 0.72],
-    [0.7, 0.64],
-  ],
-};
-
-// Key locations as normalized [x, y]
-const JAPAN = [0.79, 0.27];
-const DESTINATIONS = [
-  { name: 'Los Angeles', pos: [0.12, 0.32] as [number, number] },
-  { name: 'London', pos: [0.47, 0.18] as [number, number] },
-  { name: 'Singapore', pos: [0.71, 0.48] as [number, number] },
-  { name: 'Sydney', pos: [0.8, 0.65] as [number, number] },
-  { name: 'Dubai', pos: [0.6, 0.35] as [number, number] },
+// Continent outlines as [lat, lng] arrays
+const CONTINENTS: [number, number][][] = [
+  // North America
+  [[71,-166],[64,-168],[55,-163],[57,-135],[49,-124],[45,-124],[37,-122],[32,-117],[29,-110],
+   [22,-106],[15,-92],[15,-87],[9,-79],[7,-77],[10,-75],[20,-87],[25,-80],[30,-81],
+   [35,-75],[42,-70],[47,-53],[52,-55],[58,-62],[63,-68],[63,-73],[68,-80],[72,-85],
+   [72,-105],[68,-130],[70,-145],[71,-166]],
+  // South America
+  [[12,-72],[10,-62],[5,-52],[0,-51],[-5,-35],[-10,-37],[-23,-43],[-30,-51],[-34,-53],
+   [-42,-64],[-55,-68],[-56,-65],[-42,-63],[-25,-49],[-15,-76],[-5,-81],[0,-78],
+   [5,-77],[12,-72]],
+  // Europe
+  [[71,28],[68,18],[65,14],[58,5],[51,2],[48,-5],[43,-9],[36,-9],[36,-5],[37,0],
+   [40,3],[43,3],[44,8],[38,15],[38,24],[42,28],[44,29],[47,38],[47,32],
+   [53,28],[54,18],[56,21],[58,25],[60,25],[65,25],[71,28]],
+  // Africa
+  [[37,-5],[37,10],[30,32],[22,37],[15,42],[12,43],[0,42],[-5,40],[-10,40],
+   [-25,33],[-35,20],[-35,18],[-27,15],[-5,10],[4,2],[5,-5],[15,-17],
+   [25,-17],[30,-10],[33,-8],[37,-5]],
+  // Asia (main)
+  [[71,30],[71,60],[65,65],[55,50],[50,53],[43,51],[38,45],[25,57],[22,65],
+   [10,77],[8,77],[0,103],[-5,105],[5,103],[15,110],[20,110],[22,114],
+   [25,121],[28,121],[32,122],[35,126],[38,128],[42,130],[45,135],[48,142],
+   [52,142],[55,135],[55,120],[60,100],[65,90],[68,68],[71,58],[71,30]],
+  // Australia
+  [[-14,130],[-20,122],[-26,114],[-32,116],[-35,118],[-38,140],[-38,147],
+   [-35,150],[-28,154],[-22,150],[-14,144],[-12,135],[-14,130]],
+  // Greenland
+  [[60,-44],[64,-53],[68,-54],[72,-55],[76,-60],[83,-35],[83,-25],
+   [76,-18],[70,-22],[65,-37],[60,-44]],
 ];
 
-const USA_STATUS_COLORS: Record<string, string> = {
-  operational: 'rgba(0, 196, 140, 0.3)',
-  partial: 'rgba(255, 193, 7, 0.3)',
-  suspended: 'rgba(255, 71, 87, 0.3)',
-  unknown: 'rgba(136, 136, 136, 0.15)',
+// North America polygon (for USA status coloring)
+const NORTH_AMERICA = CONTINENTS[0];
+
+const JAPAN: [number, number] = [35, 135];
+const DESTINATIONS: { name: string; pos: [number, number] }[] = [
+  { name: 'Los Angeles', pos: [34, -118] },
+  { name: 'London', pos: [51, -0] },
+  { name: 'Singapore', pos: [1, 103] },
+  { name: 'Sydney', pos: [-33, 151] },
+  { name: 'Dubai', pos: [25, 55] },
+];
+
+const STATUS_FILL: Record<string, string> = {
+  operational: 'rgba(0, 196, 140, 0.35)',
+  partial:     'rgba(255, 193, 7, 0.35)',
+  suspended:   'rgba(255, 71, 87, 0.35)',
+  unknown:     'rgba(80, 100, 130, 0.2)',
+};
+const STATUS_STROKE: Record<string, string> = {
+  operational: 'rgba(0, 230, 160, 0.6)',
+  partial:     'rgba(255, 210, 60, 0.6)',
+  suspended:   'rgba(255, 90, 90, 0.6)',
+  unknown:     'rgba(100, 130, 180, 0.3)',
 };
 
-interface Vehicle {
+const TO_RAD = Math.PI / 180;
+
+function project(lat: number, lng: number, centerLng: number, cx: number, cy: number, r: number) {
+  const phi = lat * TO_RAD;
+  const lam = (lng - centerLng) * TO_RAD;
+  const x = Math.cos(phi) * Math.sin(lam);
+  const y = -Math.sin(phi);
+  const z = Math.cos(phi) * Math.cos(lam);
+  return { sx: cx + r * x, sy: cy + r * y, z };
+}
+
+function slerp(lat1: number, lng1: number, lat2: number, lng2: number, t: number): [number, number] {
+  const p1 = lat1 * TO_RAD, l1 = lng1 * TO_RAD;
+  const p2 = lat2 * TO_RAD, l2 = lng2 * TO_RAD;
+  const ax = Math.cos(p1) * Math.cos(l1), ay = Math.cos(p1) * Math.sin(l1), az = Math.sin(p1);
+  const bx = Math.cos(p2) * Math.cos(l2), by = Math.cos(p2) * Math.sin(l2), bz = Math.sin(p2);
+  const dot = Math.min(1, Math.max(-1, ax * bx + ay * by + az * bz));
+  const angle = Math.acos(dot);
+  if (angle < 0.0001) return [lat1, lng1];
+  const sa = Math.sin(angle);
+  const f1 = Math.sin((1 - t) * angle) / sa;
+  const f2 = Math.sin(t * angle) / sa;
+  const cx_ = f1 * ax + f2 * bx, cy_ = f1 * ay + f2 * by, cz_ = f1 * az + f2 * bz;
+  return [Math.atan2(cz_, Math.sqrt(cx_ * cx_ + cy_ * cy_)) / TO_RAD, Math.atan2(cy_, cx_) / TO_RAD];
+}
+
+interface Dot {
   t: number;
   speed: number;
   trail: [number, number][];
-  destIndex: number;
-}
-
-function bezierPoint(
-  t: number,
-  p0: [number, number],
-  p1: [number, number],
-  p2: [number, number]
-): [number, number] {
-  const x = (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t ** 2 * p2[0];
-  const y = (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t ** 2 * p2[1];
-  return [x, y];
-}
-
-function controlPoint(from: [number, number], to: [number, number]): [number, number] {
-  const mx = (from[0] + to[0]) / 2;
-  const my = (from[1] + to[1]) / 2;
-  const dist = Math.hypot(to[0] - from[0], to[1] - from[1]);
-  return [mx, my - dist * 0.4];
+  destIdx: number;
 }
 
 export default function Globe({ usStatus }: GlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
-  const vehiclesRef = useRef<Vehicle[]>(
+  const rotRef = useRef<number>(135); // start centered on Japan
+  const dotsRef = useRef<Dot[]>(
     DESTINATIONS.map((_, i) => ({
       t: i / DESTINATIONS.length,
-      speed: 0.0012 + Math.random() * 0.0006,
+      speed: 0.0018 + Math.random() * 0.001,
       trail: [],
-      destIndex: i,
+      destIdx: i,
     }))
   );
 
@@ -94,148 +115,265 @@ export default function Globe({ usStatus }: GlobeProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let dotOffset = 0;
-
-    function toCanvas(nx: number, ny: number): [number, number] {
-      return [nx * canvas!.width, ny * canvas!.height];
-    }
-
-    function drawContinent(points: number[][], fill: string) {
-      if (points.length < 2) return;
-      ctx!.beginPath();
-      const [sx, sy] = toCanvas(points[0][0], points[0][1]);
-      ctx!.moveTo(sx, sy);
-      for (let i = 1; i < points.length; i++) {
-        const [px, py] = toCanvas(points[i][0], points[i][1]);
-        ctx!.lineTo(px, py);
-      }
-      ctx!.closePath();
-      ctx!.fillStyle = fill;
-      ctx!.fill();
-      ctx!.strokeStyle = 'rgba(100, 140, 200, 0.4)';
-      ctx!.lineWidth = 0.8;
-      ctx!.stroke();
-    }
-
-    function draw() {
-      const W = canvas!.width;
-      const H = canvas!.height;
-
-      // Background
-      ctx!.fillStyle = '#0a0f1e';
-      ctx!.fillRect(0, 0, W, H);
-
-      // Dot grid
-      dotOffset = (dotOffset + 0.3) % 20;
-      ctx!.fillStyle = 'rgba(100, 130, 180, 0.08)';
-      for (let x = dotOffset % 20; x < W; x += 20) {
-        for (let y = dotOffset % 20; y < H; y += 20) {
-          ctx!.beginPath();
-          ctx!.arc(x, y, 1, 0, Math.PI * 2);
-          ctx!.fill();
-        }
-      }
-
-      // Draw continents
-      const usaFill = USA_STATUS_COLORS[usStatus] ?? USA_STATUS_COLORS.unknown;
-      drawContinent(CONTINENTS.northAmerica, usaFill);
-      drawContinent(CONTINENTS.southAmerica, 'rgba(60, 100, 160, 0.25)');
-      drawContinent(CONTINENTS.europe, 'rgba(60, 100, 160, 0.25)');
-      drawContinent(CONTINENTS.africa, 'rgba(60, 100, 160, 0.25)');
-      drawContinent(CONTINENTS.asia, 'rgba(60, 100, 160, 0.25)');
-      drawContinent(CONTINENTS.australia, 'rgba(60, 100, 160, 0.25)');
-
-      // Draw routes (bezier curves)
-      const jp = toCanvas(JAPAN[0], JAPAN[1]);
-      DESTINATIONS.forEach((dest) => {
-        const dp = toCanvas(dest.pos[0], dest.pos[1]);
-        const cp = controlPoint(
-          [JAPAN[0], JAPAN[1]],
-          dest.pos
-        );
-        const cpCanvas = toCanvas(cp[0], cp[1]);
-
-        ctx!.beginPath();
-        ctx!.moveTo(jp[0], jp[1]);
-        ctx!.quadraticCurveTo(cpCanvas[0], cpCanvas[1], dp[0], dp[1]);
-        ctx!.strokeStyle = 'rgba(100, 180, 255, 0.15)';
-        ctx!.lineWidth = 1;
-        ctx!.setLineDash([4, 4]);
-        ctx!.stroke();
-        ctx!.setLineDash([]);
-      });
-
-      // Update and draw vehicles
-      vehiclesRef.current.forEach((v) => {
-        v.t += v.speed;
-        if (v.t > 1) v.t -= 1;
-
-        const dest = DESTINATIONS[v.destIndex];
-        const cp = controlPoint([JAPAN[0], JAPAN[1]], dest.pos);
-        const [nx, ny] = bezierPoint(v.t, [JAPAN[0], JAPAN[1]], cp, dest.pos);
-        const [cx, cy] = toCanvas(nx, ny);
-
-        v.trail.push([cx, cy]);
-        if (v.trail.length > 20) v.trail.shift();
-
-        // Draw trail
-        for (let i = 1; i < v.trail.length; i++) {
-          const alpha = (i / v.trail.length) * 0.6;
-          ctx!.beginPath();
-          ctx!.moveTo(v.trail[i - 1][0], v.trail[i - 1][1]);
-          ctx!.lineTo(v.trail[i][0], v.trail[i][1]);
-          ctx!.strokeStyle = `rgba(100, 220, 255, ${alpha})`;
-          ctx!.lineWidth = 1.5;
-          ctx!.stroke();
-        }
-
-        // Draw triangle (plane)
-        const [prevNx, prevNy] = v.trail.length > 1
-          ? v.trail[v.trail.length - 2]
-          : [cx - 1, cy];
-        const angle = Math.atan2(cy - prevNy, cx - prevNx);
-        const size = 5;
-        ctx!.save();
-        ctx!.translate(cx, cy);
-        ctx!.rotate(angle);
-        ctx!.beginPath();
-        ctx!.moveTo(size, 0);
-        ctx!.lineTo(-size, -size * 0.6);
-        ctx!.lineTo(-size, size * 0.6);
-        ctx!.closePath();
-        ctx!.fillStyle = 'rgba(150, 230, 255, 0.9)';
-        ctx!.fill();
-        ctx!.restore();
-      });
-
-      // Japan origin dot with glow
-      const [jx, jy] = jp;
-      const pulse = 0.6 + 0.4 * Math.sin(Date.now() / 500);
-      const grad = ctx!.createRadialGradient(jx, jy, 0, jx, jy, 18 * pulse);
-      grad.addColorStop(0, 'rgba(255, 210, 50, 0.9)');
-      grad.addColorStop(0.4, 'rgba(255, 180, 20, 0.4)');
-      grad.addColorStop(1, 'rgba(255, 160, 0, 0)');
-      ctx!.beginPath();
-      ctx!.arc(jx, jy, 18 * pulse, 0, Math.PI * 2);
-      ctx!.fillStyle = grad;
-      ctx!.fill();
-      ctx!.beginPath();
-      ctx!.arc(jx, jy, 4, 0, Math.PI * 2);
-      ctx!.fillStyle = '#ffd700';
-      ctx!.fill();
-
-      animRef.current = requestAnimationFrame(draw);
-    }
-
     function resize() {
       canvas!.width = canvas!.offsetWidth;
       canvas!.height = canvas!.offsetHeight;
     }
-
     resize();
     window.addEventListener('resize', resize);
-    draw();
 
+    function drawPolygon(
+      points: [number, number][],
+      centerLng: number,
+      cx: number, cy: number, r: number,
+      fillStyle: string, strokeStyle: string, lw = 0.6
+    ) {
+      ctx!.beginPath();
+      let penDown = false;
+      for (const [lat, lng] of points) {
+        const p = project(lat, lng, centerLng, cx, cy, r);
+        if (p.z >= -0.08) {
+          if (!penDown) { ctx!.moveTo(p.sx, p.sy); penDown = true; }
+          else ctx!.lineTo(p.sx, p.sy);
+        } else {
+          penDown = false;
+        }
+      }
+      ctx!.closePath();
+      ctx!.fillStyle = fillStyle;
+      ctx!.fill();
+      ctx!.strokeStyle = strokeStyle;
+      ctx!.lineWidth = lw;
+      ctx!.stroke();
+    }
+
+    function drawArc(
+      lat1: number, lng1: number, lat2: number, lng2: number,
+      centerLng: number, cx: number, cy: number, r: number,
+      color: string, lw: number, dash: number[]
+    ) {
+      const steps = 80;
+      ctx!.beginPath();
+      ctx!.setLineDash(dash);
+      ctx!.strokeStyle = color;
+      ctx!.lineWidth = lw;
+      let penDown = false;
+      for (let i = 0; i <= steps; i++) {
+        const [lat, lng] = slerp(lat1, lng1, lat2, lng2, i / steps);
+        const p = project(lat, lng, centerLng, cx, cy, r);
+        if (p.z >= 0) {
+          if (!penDown) { ctx!.moveTo(p.sx, p.sy); penDown = true; }
+          else ctx!.lineTo(p.sx, p.sy);
+        } else {
+          penDown = false;
+        }
+      }
+      ctx!.stroke();
+      ctx!.setLineDash([]);
+    }
+
+    function frame() {
+      const W = canvas!.width;
+      const H = canvas!.height;
+      const cx = W / 2;
+      const cy = H / 2;
+      const r = Math.min(W, H) * 0.46;
+
+      // Slowly rotate globe
+      rotRef.current -= 0.04; // degrees per frame (~7s per revolution at 60fps)
+
+      const cLng = rotRef.current;
+
+      // ── Background ──
+      ctx!.fillStyle = '#020812';
+      ctx!.fillRect(0, 0, W, H);
+
+      // Stars
+      ctx!.fillStyle = 'rgba(255,255,255,0.55)';
+      // Use deterministic star positions based on canvas size
+      const seed = W * 1000 + H;
+      for (let i = 0; i < 120; i++) {
+        const sx = ((Math.sin(seed + i * 137.5) + 1) / 2) * W;
+        const sy = ((Math.cos(seed + i * 97.3) + 1) / 2) * H;
+        const inside = (sx - cx) ** 2 + (sy - cy) ** 2 < (r + 20) ** 2;
+        if (!inside) {
+          const sz = 0.5 + ((Math.sin(i * 53) + 1) / 2) * 1.2;
+          ctx!.beginPath();
+          ctx!.arc(sx, sy, sz, 0, Math.PI * 2);
+          ctx!.fill();
+        }
+      }
+
+      // ── Atmosphere glow ──
+      const atm = ctx!.createRadialGradient(cx, cy, r * 0.95, cx, cy, r * 1.12);
+      atm.addColorStop(0, 'rgba(40, 130, 255, 0.25)');
+      atm.addColorStop(0.5, 'rgba(20, 80, 200, 0.1)');
+      atm.addColorStop(1, 'rgba(0, 20, 80, 0)');
+      ctx!.beginPath();
+      ctx!.arc(cx, cy, r * 1.12, 0, Math.PI * 2);
+      ctx!.fillStyle = atm;
+      ctx!.fill();
+
+      // ── Ocean sphere ──
+      const ocean = ctx!.createRadialGradient(cx - r * 0.25, cy - r * 0.2, r * 0.1, cx, cy, r);
+      ocean.addColorStop(0, '#0d2b4a');
+      ocean.addColorStop(0.7, '#061828');
+      ocean.addColorStop(1, '#020d1a');
+      ctx!.beginPath();
+      ctx!.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx!.fillStyle = ocean;
+      ctx!.fill();
+
+      // ── Clip to sphere ──
+      ctx!.save();
+      ctx!.beginPath();
+      ctx!.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx!.clip();
+
+      // ── Latitude/longitude grid (subtle) ──
+      ctx!.strokeStyle = 'rgba(50, 100, 160, 0.12)';
+      ctx!.lineWidth = 0.5;
+      for (let lat = -80; lat <= 80; lat += 20) {
+        ctx!.beginPath();
+        let first = true;
+        for (let lng = -180; lng <= 180; lng += 3) {
+          const p = project(lat, lng, cLng, cx, cy, r);
+          if (p.z >= 0) {
+            if (first) { ctx!.moveTo(p.sx, p.sy); first = false; }
+            else ctx!.lineTo(p.sx, p.sy);
+          } else { first = true; }
+        }
+        ctx!.stroke();
+      }
+      for (let lng = -180; lng < 180; lng += 30) {
+        ctx!.beginPath();
+        let first = true;
+        for (let lat = -90; lat <= 90; lat += 3) {
+          const p = project(lat, lng, cLng, cx, cy, r);
+          if (p.z >= 0) {
+            if (first) { ctx!.moveTo(p.sx, p.sy); first = false; }
+            else ctx!.lineTo(p.sx, p.sy);
+          } else { first = true; }
+        }
+        ctx!.stroke();
+      }
+
+      // ── Continents ──
+      const contFill = '#162816';
+      const contStroke = 'rgba(45, 100, 45, 0.7)';
+      for (const poly of CONTINENTS) {
+        if (poly === NORTH_AMERICA) continue; // draw separately with status color
+        drawPolygon(poly, cLng, cx, cy, r, contFill, contStroke);
+      }
+
+      // North America with status coloring
+      const naFill = STATUS_FILL[usStatus] ?? STATUS_FILL.unknown;
+      const naStroke = STATUS_STROKE[usStatus] ?? STATUS_STROKE.unknown;
+      drawPolygon(NORTH_AMERICA, cLng, cx, cy, r, naFill, naStroke, 1.2);
+
+      // ── Route arcs ──
+      for (const dest of DESTINATIONS) {
+        drawArc(
+          JAPAN[0], JAPAN[1], dest.pos[0], dest.pos[1],
+          cLng, cx, cy, r,
+          'rgba(80, 200, 255, 0.18)', 1, [4, 6]
+        );
+      }
+
+      // ── Moving dots ──
+      for (const dot of dotsRef.current) {
+        dot.t += dot.speed;
+        if (dot.t > 1) dot.t -= 1;
+
+        const dest = DESTINATIONS[dot.destIdx];
+        const [lat, lng] = slerp(JAPAN[0], JAPAN[1], dest.pos[0], dest.pos[1], dot.t);
+        const p = project(lat, lng, cLng, cx, cy, r);
+
+        if (p.z >= 0) {
+          dot.trail.push([p.sx, p.sy]);
+          if (dot.trail.length > 22) dot.trail.shift();
+
+          // Trail
+          for (let i = 1; i < dot.trail.length; i++) {
+            const alpha = (i / dot.trail.length) * 0.7;
+            ctx!.beginPath();
+            ctx!.moveTo(dot.trail[i - 1][0], dot.trail[i - 1][1]);
+            ctx!.lineTo(dot.trail[i][0], dot.trail[i][1]);
+            ctx!.strokeStyle = `rgba(120, 220, 255, ${alpha})`;
+            ctx!.lineWidth = 1.8;
+            ctx!.stroke();
+          }
+
+          // Dot head
+          const glowR = ctx!.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, 5);
+          glowR.addColorStop(0, 'rgba(200, 240, 255, 1)');
+          glowR.addColorStop(1, 'rgba(80, 200, 255, 0)');
+          ctx!.beginPath();
+          ctx!.arc(p.sx, p.sy, 5, 0, Math.PI * 2);
+          ctx!.fillStyle = glowR;
+          ctx!.fill();
+          ctx!.beginPath();
+          ctx!.arc(p.sx, p.sy, 2, 0, Math.PI * 2);
+          ctx!.fillStyle = '#fff';
+          ctx!.fill();
+        } else {
+          dot.trail = [];
+        }
+      }
+
+      // ── Destination dots ──
+      for (const dest of DESTINATIONS) {
+        const p = project(dest.pos[0], dest.pos[1], cLng, cx, cy, r);
+        if (p.z >= 0) {
+          ctx!.beginPath();
+          ctx!.arc(p.sx, p.sy, 3, 0, Math.PI * 2);
+          ctx!.fillStyle = 'rgba(100, 200, 255, 0.7)';
+          ctx!.fill();
+          ctx!.beginPath();
+          ctx!.arc(p.sx, p.sy, 1.5, 0, Math.PI * 2);
+          ctx!.fillStyle = '#fff';
+          ctx!.fill();
+        }
+      }
+
+      // ── Japan origin pulsing dot ──
+      const jp = project(JAPAN[0], JAPAN[1], cLng, cx, cy, r);
+      if (jp.z >= 0) {
+        const pulse = 0.55 + 0.45 * Math.sin(Date.now() / 450);
+        const gR1 = ctx!.createRadialGradient(jp.sx, jp.sy, 0, jp.sx, jp.sy, 24 * pulse);
+        gR1.addColorStop(0, 'rgba(255, 200, 30, 0.9)');
+        gR1.addColorStop(0.4, 'rgba(255, 140, 0, 0.4)');
+        gR1.addColorStop(1, 'rgba(255, 80, 0, 0)');
+        ctx!.beginPath();
+        ctx!.arc(jp.sx, jp.sy, 24 * pulse, 0, Math.PI * 2);
+        ctx!.fillStyle = gR1;
+        ctx!.fill();
+
+        ctx!.beginPath();
+        ctx!.arc(jp.sx, jp.sy, 5, 0, Math.PI * 2);
+        ctx!.fillStyle = '#ffd700';
+        ctx!.fill();
+        ctx!.strokeStyle = '#fff';
+        ctx!.lineWidth = 1;
+        ctx!.stroke();
+      }
+
+      ctx!.restore(); // end clip
+
+      // ── Sphere edge highlight (rim light) ──
+      const rim = ctx!.createRadialGradient(cx, cy, r * 0.85, cx, cy, r);
+      rim.addColorStop(0, 'rgba(0,0,0,0)');
+      rim.addColorStop(0.85, 'rgba(0,0,0,0)');
+      rim.addColorStop(1, 'rgba(5, 20, 60, 0.7)');
+      ctx!.beginPath();
+      ctx!.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx!.fillStyle = rim;
+      ctx!.fill();
+
+      animRef.current = requestAnimationFrame(frame);
+    }
+
+    frame();
     return () => {
       cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', resize);
@@ -245,12 +383,7 @@ export default function Globe({ usStatus }: GlobeProps) {
   return (
     <canvas
       ref={canvasRef}
-      style={{
-        width: '100%',
-        height: 'clamp(250px, 35vw, 400px)',
-        display: 'block',
-        borderRadius: '12px',
-      }}
+      style={{ width: '100%', height: '100%', display: 'block' }}
     />
   );
 }
