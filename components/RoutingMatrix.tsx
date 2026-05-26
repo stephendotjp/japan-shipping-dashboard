@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState, useCallback } from 'react';
 import { ParsedStatus } from '@/lib/db';
 
 type CarrierData = (ParsedStatus & { stale: boolean; staleSince: string | null }) | null;
@@ -37,6 +38,18 @@ const REGIONS = [
   },
 ];
 
+const STATUS_OPTIONS: Array<{ value: DotStatus | null; label: string; activeClass: string }> = [
+  { value: null,   label: 'Auto (AI)',  activeClass: 'active-auto' },
+  { value: 'ok',   label: '✓ Accepted', activeClass: 'active-ok'   },
+  { value: 'warn', label: '⚠ Alert',    activeClass: 'active-warn' },
+  { value: 'no',   label: '✕ Suspended',activeClass: 'active-no'   },
+];
+
+interface MatrixData {
+  cells: Record<string, DotStatus>;
+  notes: Record<string, string>;
+}
+
 function getOverall(data: ParsedStatus): string {
   if (data.usDestinationStatus === 'suspended' || data.japanOriginStatus === 'suspended') return 'suspended';
   if (data.usDestinationStatus === 'partial' || data.japanOriginStatus === 'partial') return 'partial';
@@ -44,7 +57,7 @@ function getOverall(data: ParsedStatus): string {
   return 'unknown';
 }
 
-function getDot(
+function getAIDot(
   data: CarrierData,
   keywords: string[],
   isUSA: boolean,
@@ -53,7 +66,6 @@ function getDot(
 
   const overall = getOverall(data);
 
-  // For the USA row use usDestinationStatus directly, still scan alerts for nuance
   if (isUSA) {
     const usAlert = (data.activeAlerts ?? []).find(a => {
       const t = (a.title + ' ' + a.description).toLowerCase();
@@ -70,18 +82,14 @@ function getDot(
     return { status: 'unk', tooltip: 'Monitoring — limited data' };
   }
 
-  // Global suspension applies to all regions
   if (overall === 'suspended') return { status: 'no', tooltip: 'Service suspended' };
 
-  // Scan alerts for region-specific mentions
   for (const alert of data.activeAlerts ?? []) {
     const text = (alert.title + ' ' + alert.description).toLowerCase();
     if (keywords.some(k => text.includes(k))) {
       const isSuspended =
-        text.includes('suspend') ||
-        text.includes('halted') ||
-        text.includes('do not') ||
-        text.includes('fully suspend');
+        text.includes('suspend') || text.includes('halted') ||
+        text.includes('do not') || text.includes('fully suspend');
       if (isSuspended || alert.severity === 'critical') {
         return { status: 'no', tooltip: alert.title };
       }
@@ -89,18 +97,17 @@ function getDot(
     }
   }
 
-  // Fall back to overall carrier status
   if (overall === 'operational') return { status: 'ok', tooltip: 'Operational' };
   if (overall === 'partial') return { status: 'warn', tooltip: 'Partial — check alerts' };
   return { status: 'unk', tooltip: 'Monitoring — limited data' };
 }
 
-function getNote(
+function getAINote(
   carriers: Record<string, CarrierData>,
   keywords: string[],
 ): { text: string; cls: string } {
   let bestText = '';
-  let bestSeverity = 0; // 0=none, 1=warn, 2=crit
+  let bestSeverity = 0;
 
   for (const data of Object.values(carriers)) {
     if (!data) continue;
@@ -121,9 +128,16 @@ function getNote(
   };
 }
 
-function Dot({ status, tooltip }: { status: DotStatus; tooltip: string }) {
+function Dot({ status, tooltip, overridden }: { status: DotStatus; tooltip: string; overridden: boolean }) {
   const sym = status === 'ok' ? '✓' : status === 'warn' ? '⚠' : status === 'no' ? '✕' : '?';
-  return <span className={`dot dot-${status}`} title={tooltip}>{sym}</span>;
+  return (
+    <span
+      className={`dot dot-${status}${overridden ? ' dot-override' : ''}`}
+      title={overridden ? `[Manual override] ${tooltip}` : tooltip}
+    >
+      {sym}
+    </span>
+  );
 }
 
 interface Props {
@@ -131,47 +145,211 @@ interface Props {
 }
 
 export default function RoutingMatrix({ carriers }: Props) {
-  return (
-    <div className="matrix-wrap">
-      <table className="matrix-table">
-        <thead>
-          <tr>
-            <th style={{ minWidth: 140 }}>Destination</th>
-            {CARRIERS.map(c => (
-              <th key={c} style={{ textAlign: 'center' }}>{CARRIER_LABELS[c]}</th>
-            ))}
-            <th>Note</th>
-          </tr>
-        </thead>
-        <tbody>
-          {REGIONS.map(region => {
-            const dots = CARRIERS.map(c =>
-              getDot(carriers[c] ?? null, region.keywords, region.isUSA)
-            );
-            const note = getNote(carriers, region.keywords);
-            const allDisrupted = dots.every(d => d.status === 'warn' || d.status === 'no');
+  const [matrix, setMatrix] = useState<MatrixData>({ cells: {}, notes: {} });
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editCells, setEditCells] = useState<Record<string, DotStatus | null>>({});
+  const [editNote, setEditNote] = useState('');
+  const [saving, setSaving] = useState(false);
 
-            return (
-              <tr key={region.name} className={allDisrupted ? 'matrix-row-warn' : undefined}>
-                <td>
-                  <span className="region-flag">{region.flag}</span>
-                  <span className="region-name">{region.name}</span>
-                </td>
-                {dots.map((dot, ci) => (
-                  <td key={CARRIERS[ci]} style={{ textAlign: 'center' }}>
-                    <Dot status={dot.status} tooltip={dot.tooltip} />
+  useEffect(() => {
+    fetch('/api/matrix')
+      .then(r => r.json())
+      .then((d: MatrixData) => setMatrix(d))
+      .catch(() => {});
+  }, []);
+
+  const openEditor = useCallback((regionName: string) => {
+    const cells: Record<string, DotStatus | null> = {};
+    for (const c of CARRIERS) {
+      const key = `${c}:${regionName}`;
+      cells[c] = (matrix.cells[key] as DotStatus) ?? null;
+    }
+    setEditCells(cells);
+    setEditNote(matrix.notes[regionName] ?? '');
+    setEditing(regionName);
+  }, [matrix]);
+
+  const handleSave = useCallback(async () => {
+    if (!editing) return;
+    setSaving(true);
+
+    const newCells = { ...matrix.cells };
+    const newNotes = { ...matrix.notes };
+
+    for (const c of CARRIERS) {
+      const key = `${c}:${editing}`;
+      if (editCells[c] == null) {
+        delete newCells[key];
+      } else {
+        newCells[key] = editCells[c]!;
+      }
+    }
+
+    if (editNote.trim()) {
+      newNotes[editing] = editNote.trim();
+    } else {
+      delete newNotes[editing];
+    }
+
+    const updated: MatrixData = { cells: newCells, notes: newNotes };
+
+    try {
+      await fetch('/api/matrix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      setMatrix(updated);
+    } catch { /* retain current state */ }
+
+    setSaving(false);
+    setEditing(null);
+  }, [editing, editCells, editNote, matrix]);
+
+  const handleClear = useCallback(async () => {
+    if (!editing) return;
+    setSaving(true);
+
+    const newCells = { ...matrix.cells };
+    const newNotes = { ...matrix.notes };
+    for (const c of CARRIERS) delete newCells[`${c}:${editing}`];
+    delete newNotes[editing];
+
+    const updated: MatrixData = { cells: newCells, notes: newNotes };
+    try {
+      await fetch('/api/matrix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      setMatrix(updated);
+    } catch {}
+
+    setSaving(false);
+    setEditing(null);
+  }, [editing, matrix]);
+
+  const editingRegion = REGIONS.find(r => r.name === editing);
+
+  return (
+    <>
+      <div className="matrix-wrap">
+        <table className="matrix-table">
+          <thead>
+            <tr>
+              <th style={{ minWidth: 140 }}>Destination</th>
+              {CARRIERS.map(c => (
+                <th key={c} style={{ textAlign: 'center' }}>{CARRIER_LABELS[c]}</th>
+              ))}
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {REGIONS.map(region => {
+              const aiDots = CARRIERS.map(c =>
+                getAIDot(carriers[c] ?? null, region.keywords, region.isUSA)
+              );
+
+              const effectiveDots = CARRIERS.map((c, ci) => {
+                const key = `${c}:${region.name}`;
+                const override = matrix.cells[key] as DotStatus | undefined;
+                return {
+                  status: override ?? aiDots[ci].status,
+                  tooltip: override
+                    ? (override === 'ok' ? 'Accepted' : override === 'warn' ? 'Alert' : 'Suspended')
+                    : aiDots[ci].tooltip,
+                  overridden: !!override,
+                };
+              });
+
+              const aiNote = getAINote(carriers, region.keywords);
+              const managerNote = matrix.notes[region.name];
+              const hasOverride = CARRIERS.some(c => matrix.cells[`${c}:${region.name}`]);
+              const allDisrupted = effectiveDots.every(d => d.status === 'warn' || d.status === 'no');
+
+              return (
+                <tr
+                  key={region.name}
+                  className={[
+                    'matrix-row-clickable',
+                    allDisrupted ? 'matrix-row-warn' : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => openEditor(region.name)}
+                >
+                  <td>
+                    <span className="region-flag">{region.flag}</span>
+                    <span className="region-name">{region.name}</span>
                   </td>
-                ))}
-                <td>
-                  <span className={`note-cell${note.cls ? ' ' + note.cls : ''}`}>
-                    {note.text || '—'}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                  {effectiveDots.map((dot, ci) => (
+                    <td key={CARRIERS[ci]} style={{ textAlign: 'center' }}>
+                      <Dot status={dot.status} tooltip={dot.tooltip} overridden={dot.overridden} />
+                    </td>
+                  ))}
+                  <td>
+                    <span className={`note-cell${aiNote.cls && !managerNote ? ' ' + aiNote.cls : ''}`}>
+                      {managerNote || aiNote.text || '—'}
+                    </span>
+                    {hasOverride && (
+                      <span className="edited-badge">edited</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {editing && editingRegion && (
+        <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setEditing(null); }}>
+          <div className="modal-box">
+            <div className="modal-title">
+              <span className="modal-flag">{editingRegion.flag}</span>
+              {editingRegion.name}
+            </div>
+
+            <div className="modal-section-label">Carrier status overrides</div>
+
+            {CARRIERS.map(c => (
+              <div key={c} className="modal-carrier-row">
+                <span className="modal-carrier-label">{CARRIER_LABELS[c]}</span>
+                <div className="modal-status-btns">
+                  {STATUS_OPTIONS.map(opt => (
+                    <button
+                      key={String(opt.value)}
+                      className={`modal-status-btn${editCells[c] === opt.value ? ' ' + opt.activeClass : ''}`}
+                      onClick={() => setEditCells(prev => ({ ...prev, [c]: opt.value }))}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="modal-section-label" style={{ marginTop: 18 }}>Manager note</div>
+            <textarea
+              className="modal-textarea"
+              rows={3}
+              placeholder="Optional note for this destination (e.g. 'Cleared by ops — resume normal shipping')"
+              value={editNote}
+              onChange={e => setEditNote(e.target.value)}
+            />
+
+            <div className="modal-actions">
+              <button className="modal-btn" onClick={handleClear} disabled={saving}>
+                Clear overrides
+              </button>
+              <button className="modal-btn" onClick={() => setEditing(null)} disabled={saving}>
+                Cancel
+              </button>
+              <button className="modal-btn modal-btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
