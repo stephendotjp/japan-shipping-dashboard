@@ -42,7 +42,7 @@ export default function WorldMap() {
 
         if (cancelled) return;
 
-        const W = 1400, H = 220;
+        const W = 1400, H = 450;
         const projection = d3.geoNaturalEarth1()
           .fitExtent([[8, 8], [W - 8, H - 8]], { type: 'Sphere' } as any);
         const pathGen = d3.geoPath(projection);
@@ -81,14 +81,14 @@ export default function WorldMap() {
   }, []);
 
   return (
-    <div style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
+    <div style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', height: '100%' }}>
       <svg
-        viewBox="0 0 1400 220"
-        style={{ width: '100%', height: '440px', display: 'block' }}
+        viewBox="0 0 1400 450"
+        style={{ width: '100%', height: '100%', display: 'block' }}
         xmlns="http://www.w3.org/2000/svg"
       >
         {/* Ocean — institutional pale teal, like a government document map */}
-        <rect width="1400" height="220" fill="#BEC8CA" />
+        <rect width="1400" height="450" fill="#BEC8CA" />
 
         {!mapData && !error && (
           <text x="700" y="115" textAnchor="middle" fill="#9A9490"

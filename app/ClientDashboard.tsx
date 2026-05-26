@@ -115,7 +115,8 @@ export default function ClientDashboard({ initial }: Props) {
   return (
     <div style={{
       background: 'var(--bg)',
-      minHeight: '100vh',
+      height: '100vh',
+      overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
       fontFamily: 'var(--font-sans)',
@@ -161,8 +162,10 @@ export default function ClientDashboard({ initial }: Props) {
         </div>
       </div>
 
-      {/* ── World map panel ── */}
-      <WorldMap />
+      {/* ── World map panel ── fills all remaining vertical space */}
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <WorldMap />
+      </div>
 
       {/* ── Carrier cards ── */}
       <div style={{
@@ -217,7 +220,6 @@ export default function ClientDashboard({ initial }: Props) {
         alignItems: 'center',
         justifyContent: 'space-between',
         flexShrink: 0,
-        marginTop: 'auto',
       }}>
         <span style={{ ...LABEL, color: '#A49E96' }}>
           Data: Firecrawl scrape + Claude AI parse · Refreshes at 06:00 &amp; 18:00 JST

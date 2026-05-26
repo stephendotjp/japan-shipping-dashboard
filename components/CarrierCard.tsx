@@ -88,51 +88,54 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
         <StatusChip status={status} />
       </div>
 
-      {/* Route rows */}
-      <div style={{ padding: '16px 28px', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Route row */}
+      <div style={{ padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {!data ? (
           <div style={{ ...LABEL, color: '#C0BAB0', paddingTop: 4 }}>NO DATA</div>
         ) : (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={LABEL}>INTL. SERVICES</span>
-              <StatusChip status={data.usDestinationStatus} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={LABEL}>JAPAN ORIGIN</span>
-              <StatusChip status={data.japanOriginStatus} />
-            </div>
-          </>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={LABEL}>INTL. SERVICES</span>
+            <StatusChip status={data.usDestinationStatus} />
+          </div>
         )}
       </div>
 
-      {/* Alert strip */}
+      {/* Alerts — all alerts shown with full title + description */}
       <div style={{
-        minHeight: '42px',
-        padding: '10px 28px',
-        background: topAlert ? '#EAE0B8' : '#F0EDE6',
-        borderTop: `1px solid ${topAlert ? '#C0A848' : 'var(--border)'}`,
+        flex: 1,
+        padding: '12px 28px',
+        background: (data?.activeAlerts?.length ?? 0) > 0 ? '#EAE0B8' : '#F0EDE6',
+        borderTop: `1px solid ${(data?.activeAlerts?.length ?? 0) > 0 ? '#C0A848' : 'var(--border)'}`,
         borderBottom: '1px solid var(--border)',
       }}>
-        {topAlert ? (
-          <div style={{
-            fontSize: '14px',
-            color: '#5E4818',
-            letterSpacing: '0.03em',
-            lineHeight: 1.4,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {topAlert.title}
-            {(data?.activeAlerts?.length ?? 0) > 1 && (
-              <span style={{ color: '#8C7030', marginLeft: 6 }}>
-                +{(data?.activeAlerts?.length ?? 1) - 1} more
-              </span>
-            )}
-          </div>
-        ) : (
+        {(data?.activeAlerts?.length ?? 0) === 0 ? (
           <div style={{ ...LABEL, color: '#C0BAB0' }}>NO ACTIVE ALERTS</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {data!.activeAlerts.map((alert, i) => (
+              <div key={i}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#5E4818',
+                  letterSpacing: '0.02em',
+                  lineHeight: 1.4,
+                }}>
+                  {alert.title}
+                </div>
+                {alert.description && (
+                  <div style={{
+                    fontSize: '13px',
+                    color: '#7A6030',
+                    marginTop: 5,
+                    lineHeight: 1.55,
+                  }}>
+                    {alert.description}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
