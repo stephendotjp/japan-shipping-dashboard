@@ -6,7 +6,7 @@ This document gives a complete picture of the project so you can make changes co
 
 ## What This Is
 
-A real-time shipping status dashboard for a warehouse operations team. It monitors four international carriers (Japan Post, FedEx, UPS, DHL) for service disruptions affecting shipments from Japan. It is designed to be displayed on a large TV screen so shipping agents can glance at it to know which carriers are safe to use.
+A real-time shipping status dashboard for a warehouse operations team. It monitors four international carriers (Japan Post, FedEx, UPS, DHL) for service disruptions affecting shipments from Japan. Designed to be displayed on a large TV screen — shipping agents glance at it to know which carriers and destinations are safe to use.
 
 **Live URL:** https://japan-shipping-dashboard.vercel.app  
 **GitHub:** https://github.com/stephendotjp/japan-shipping-dashboard  
@@ -24,9 +24,12 @@ A real-time shipping status dashboard for a warehouse operations team. It monito
 | AI parsing | Anthropic SDK — `claude-sonnet-4-20250514` |
 | Database | Vercel KV (Upstash Redis REST) via `@vercel/kv` |
 | Scheduling | Vercel Cron Jobs (free tier, 2 jobs) |
-| Map | D3 v7 + TopoJSON + world-atlas CDN data |
 | Fonts | IBM Plex Sans + IBM Plex Mono (Google Fonts via `next/font`) |
 | Deployment | Vercel (free tier) |
+
+> Note: `@vercel/kv` is deprecated (Vercel moved to direct Upstash integration) but still works. Migration to `@upstash/redis` is a drop-in if needed.
+
+> Note: `Globe.tsx` still exists in the repo but is **not rendered** in the current dashboard. It can be deleted safely.
 
 ---
 
@@ -36,13 +39,14 @@ A real-time shipping status dashboard for a warehouse operations team. It monito
 /
 ├── app/
 │   ├── layout.tsx              # IBM Plex font loading, metadata
-│   ├── globals.css             # Reset, CSS vars, @keyframes dashFlow
+│   ├── globals.css             # Full CSS design system — vars, component classes, modal
 │   ├── page.tsx                # Server component — fetches KV data, renders ClientDashboard
-│   ├── ClientDashboard.tsx     # Client component — layout, polling, summary bar
+│   ├── ClientDashboard.tsx     # Client component — layout, polling, clock, alerts
 │   ├── admin/
 │   │   └── page.tsx            # Debug panel (no auth) — scrape history, trigger button
 │   └── api/
 │       ├── status/route.ts     # GET — all carrier statuses + stale detection
+│       ├── matrix/route.ts     # GET/POST — manager matrix overrides (KV key: matrix:overrides)
 │       ├── scrape/route.ts     # POST/GET — cron-triggered scrape (auth required)
 │       ├── health/route.ts     # GET — uptime + per-carrier last success
 │       └── admin/
@@ -58,8 +62,9 @@ A real-time shipping status dashboard for a warehouse operations team. It monito
 │       ├── ups.ts
 │       └── dhl.ts
 ├── components/
-│   ├── Globe.tsx               # Flat SVG world map (D3 Natural Earth projection)
-│   └── CarrierCard.tsx         # Individual carrier status card
+│   ├── CarrierCard.tsx         # Compact carrier status card (strip format)
+│   ├── RoutingMatrix.tsx       # Per-destination × per-carrier status table (editable)
+│   └── Globe.tsx               # Flat D3 SVG world map — NOT currently rendered
 └── vercel.json                 # Cron schedule config
 ```
 
@@ -144,8 +149,25 @@ Vercel cron sends a **GET** request (not POST) so `/api/scrape` handles both GET
 | `scrape:history:dhl` | HistoryEntry[] | Same |
 | `scrape:lastRun` | ISO timestamp string | Updated after each full scrape |
 | `scrape:nextRun` | ISO timestamp string | Set to next 09:00 or 21:00 UTC |
+| `matrix:overrides` | `{ cells: Record<string, DotStatus>, notes: Record<string, string> }` | Manager overrides for the routing matrix |
 
-The KV client is from `@vercel/kv`. Note: this package is deprecated (Vercel moved to direct Upstash integration) but still works. The underlying store is the Upstash Redis instance at `smiling-bedbug-106606.upstash.io`.
+### `matrix:overrides` structure
+
+```json
+{
+  "cells": {
+    "japanpost:Middle East": "no",
+    "fedex:Russia / Belarus": "no",
+    "ups:USA / Canada": "ok"
+  },
+  "notes": {
+    "Middle East": "Cleared by ops team — resume DHL only",
+    "Russia / Belarus": "All carriers suspended per compliance"
+  }
+}
+```
+
+Cell keys are `"{carrier}:{regionName}"`. A missing cell key means "Auto (AI-derived)" for that cell. Notes keys are region names and apply to the whole row regardless of carrier.
 
 ---
 
@@ -200,6 +222,12 @@ Returns all carrier data for the dashboard. Marks data as `stale: true` if older
 }
 ```
 
+### `GET /api/matrix`
+Returns the manager's routing matrix overrides from KV. Returns `{ cells: {}, notes: {} }` if nothing has been saved yet.
+
+### `POST /api/matrix`
+Saves the full `{ cells, notes }` object to KV. The client always sends the complete object (not a patch) — no merge logic on the server. Body must be `Content-Type: application/json`.
+
 ### `POST /api/scrape` (also `GET`)
 Protected — requires `x-vercel-cron: 1` header (Vercel) or `Authorization: Bearer {CRON_SECRET}`.  
 Runs all 4 scrapers in parallel, parses with Claude, writes to KV.  
@@ -218,94 +246,116 @@ No authentication. Runs the same scrape logic as `/api/scrape`. This is the butt
 
 ## UI Design System
 
-**Philosophy:** Industrial operations monitor. Clean, minimal, professional. Designed for a large warehouse TV screen — readable at a distance.
+**Philosophy:** Compact industrial ops monitor. Clean, minimal, professional. Readable at a distance on a large TV screen.
 
-### Colors
+### CSS Custom Properties (`app/globals.css`)
 
-| Token | Hex | Usage |
-|---|---|---|
-| `--bg` | `#F5F3EF` | Page background |
-| `--topbar` | `#1A1A18` | Top navigation bar |
-| `--border` | `#D8D6D0` | All card/section borders, grid gaps |
-| Ocean | `#1C2A3A` | World map ocean fill |
-| Land | `#2E4034` | World map country fill |
-| Japan amber | `#D4A017` | Japan origin dot, arc color, JPN label |
+```css
+--font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+--font-mono: 'IBM Plex Mono', monospace;
+--color-background-primary: #ffffff;
+--color-background-secondary: #f4f4f5;
+--color-border-secondary: #e4e4e7;
+--color-border-tertiary: rgba(0, 0, 0, 0.07);
+--color-text-primary: #18181b;
+--color-text-secondary: #71717a;
+--color-text-tertiary: #a1a1aa;
+--border-radius-md: 8px;
+```
 
-### Status Chip Colors
+Body background: `#e8e8ea`. Max content width: 1500px centered.
 
-| Status | Background | Text | Border |
+### Status Colors
+
+| Status | Background | Text | Usage |
 |---|---|---|---|
-| operational | `#EAF4E5` | `#2D6B1A` | `#B4D9A2` |
-| partial | `#FEF3CD` | `#7A5800` | `#F0D070` |
-| suspended | `#FDECEA` | `#8B1A1A` | `#F0A0A0` |
-| unknown | `#F0EEE8` | `#888888` | `#D8D6D0` |
+| ok / operational | `#dcfce7` | `#15803d` | Green |
+| partial / warn | `#fef3c7` | `#92400e` | Amber |
+| no / suspended | `#fee2e2` | `#991b1b` | Red |
+| unknown | `#f1f5f9` | `#475569` | Slate |
 
-### Typography
+### Font Sizes (TV-optimised)
 
-- **UI text:** IBM Plex Sans (`var(--font-sans)`) — carrier names (16px/500), labels (10–11px/500, uppercase, `letter-spacing: 0.1em`)
-- **Data/numbers:** IBM Plex Mono (`var(--font-mono)`) — timers, counts, timestamps
-- **Rule:** Nothing below 11px. Monospace only for data values, never for labels or descriptive text.
+| Element | Size | Weight |
+|---|---|---|
+| Top bar title | 16px | 600 |
+| Carrier name | 17px | 600 |
+| Carrier sub | 13px | 400 |
+| Matrix header | 12px | 500 |
+| Matrix cell | 14px | — |
+| Dot symbol | 14px in 32×32px circle | 700 |
+| Alert head | 14px | 600 |
+| Alert body | 13px | 400 |
+| Section label | 12px | 500, uppercase |
+| Legend | 12px | 400 |
+| Footer / clock | 12–16px | 500 (mono) |
 
 ### Layout (top to bottom)
 
-1. **Topbar** (54px, `#1A1A18`) — title + subtitle left, last-updated + countdown right
-2. **World map** (220px SVG, white panel) — D3 flat map with animated arcs
-3. **Carrier cards** (4 columns, 1px `#D8D6D0` gaps, white cells)
-4. **Summary bar** (4 cells: Operational / Partial / Unknown / Active Alerts counts)
-5. **Bottom bar** (36px, white) — data source note left, countdown + progress bar right
+1. **Top bar** — live pulse dot, title, subtitle; right side: Admin link + live local clock (HH:MM:SS mono)
+2. **Section label** — "Carrier overview"
+3. **Carrier strip** — 4-column grid of `CarrierCard` components
+4. **Section label** — "Can we ship there right now?"
+5. **RoutingMatrix** — destination × carrier table with click-to-edit
+6. **Section label** — "Active alerts (N)"
+7. **Alerts grid** — 2-column grid of alert cards
+8. **Legend** — ✓ ⚠ ✕ ? symbol key
+9. **Footer bar** — data source note + countdown to next scrape
 
 ---
 
-## World Map (components/Globe.tsx)
+## Component Reference
 
-Despite the filename, this is a **flat SVG map** (not a globe). The filename was kept from an earlier iteration.
+### `CarrierCard` (`components/CarrierCard.tsx`)
 
-**How it works:**
+Compact strip card. Shows:
+- Carrier name + sub-label
+- "stale" badge if data is >13h old
+- Status badge: `✓ Operational` / `⚠ Partial` / `✕ Suspended` / `? Monitoring`
+- Colored top accent bar via `::before` pseudo-element (green/amber/red/slate)
 
-1. On mount, dynamically imports `d3` and `topojson-client` (client-side only — avoids SSR issues)
-2. Fetches `https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json` (~100KB TopoJSON)
-3. Creates a `d3.geoNaturalEarth1()` projection fitted to a `1400×220` viewBox
-4. Generates SVG path strings (`d` attributes) for:
-   - All country polygons (except Japan — ID `392`)
-   - Japan separately, rendered with amber stroke
-   - Great-circle arcs from Japan to 5 destinations (D3 automatically interpolates great circles for `LineString` features)
-   - Graticule (lat/lng grid lines, very subtle)
-5. Renders everything as React SVG elements
-6. Arc animation uses a CSS `@keyframes dashFlow` defined in `globals.css`:
-   ```css
-   @keyframes dashFlow {
-     from { stroke-dashoffset: 0; }
-     to   { stroke-dashoffset: -16; }
-   }
-   ```
-   Each arc has `stroke-dasharray: "8 8"` and a different `animation-duration` + `animation-delay` for variety.
+`overallStatus()` takes the worst of `usDestinationStatus` and `japanOriginStatus`.
 
-**Arc destinations:**
+### `RoutingMatrix` (`components/RoutingMatrix.tsx`)
 
-| City | Coords (lng, lat) | Duration | Delay |
-|---|---|---|---|
-| Los Angeles | [-118.2, 34.1] | 3.0s | 0s |
-| London | [-0.1, 51.5] | 4.2s | 0.6s |
-| Singapore | [103.8, 1.3] | 2.6s | 1.0s |
-| Sydney | [151.2, -33.9] | 3.6s | 1.4s |
-| Dubai | [55.3, 25.2] | 3.2s | 0.3s |
+The main operational widget. Shows 6 destination regions × 4 carriers.
 
-**Note on the Pacific arc (Japan → LA):** This great circle crosses the antimeridian (180° line). D3 splits the path at the antimeridian, so the arc renders as two segments — one heading east from Japan to the right edge of the map, and another from the left edge to LA. This is cartographically correct and visually acceptable with dashed animation.
+**Read path (AI-derived):**
+- `getAIDot(data, keywords, isUSA)` — keyword-scans `activeAlerts` for region mentions, falls back to overall carrier status
+- `getAINote(carriers, keywords)` — finds most severe region-matching alert across all carriers
 
-**Japan country ID:** The TopoJSON `countries-110m` dataset uses ISO 3166-1 numeric codes as feature IDs. Japan = `392`. The code filters this out from the main country loop and renders it separately with amber styling.
+**Regions and keywords:**
 
----
+| Region | Flag | Keywords (sample) |
+|---|---|---|
+| USA / Canada | 🇺🇸 | `usa`, `united states`, `canada`, `north america` |
+| Europe | 🇪🇺 | `europe`, `united kingdom`, `france`, `germany` |
+| Middle East | 🌍 | `middle east`, `israel`, `iran`, `saudi`, `uae` |
+| Russia / Belarus | 🇷🇺 | `russia`, `belarus` |
+| Asia Pacific | 🌏 | `china`, `korea`, `australia`, `singapore` |
+| Latin America | 🌎 | `brazil`, `mexico`, `argentina` |
 
-## Carrier Cards (components/CarrierCard.tsx)
+**Edit path (manager overrides):**
+- On mount: `GET /api/matrix` → loads `{ cells, notes }` into component state
+- Each table row has `onClick` → opens modal for that region
+- Modal: per-carrier toggles (Auto / ✓ Accepted / ⚠ Alert / ✕ Suspended) + shared note textarea
+- "Save" → merges edits into state, `POST /api/matrix` with full object
+- "Clear overrides" → removes all overrides for that row, POSTs updated object
+- "Cancel" → closes modal, no save
 
-Each card displays:
-- **Carrier name** (16px/500) + type description (10px label)
-- **Overall status chip** (top-right) — derived as the worst of `usDestinationStatus` and `japanOriginStatus`
-- **Route rows** — "INTL. SERVICES" and "JAPAN ORIGIN" (not carrier-specific route names) with individual status chips
-- **Alert strip** — shows first active alert title, truncated. "NO ACTIVE ALERTS" if clean.
-- **Footer** — "DATA STALE" warning if data is >13h old, SOURCE link
+**Visual indicators:**
+- Overridden cells: `dot-override` class (indigo ring: `box-shadow: 0 0 0 2px #6366f1`)
+- Rows with any override: `edited-badge` in the Note column (purple `#ede9fe / #6d28d9`)
+- Note column shows manager note if set, otherwise AI-derived note
+- Rows where all carriers are warn/no: `matrix-row-warn` class (amber `#fffbeb` background)
 
-Route labels are intentionally generic ("INTL. SERVICES", "JAPAN ORIGIN") rather than "Japan → USA" because the carriers report global service status, not per-route.
+**DotStatus type:** `'ok' | 'warn' | 'no' | 'unk'`
+
+**Cell key format:** `"{carrierKey}:{regionName}"` e.g. `"fedex:Middle East"`
+
+### `Globe.tsx`
+
+Still in repo, not rendered. Was a D3 Natural Earth flat world map with animated arcs from Japan to 5 destination cities. Safe to delete if cleaning up. The `@keyframes dashFlow` in `globals.css` was for its arc animation and can also be removed.
 
 ---
 
@@ -333,9 +383,9 @@ Use the admin panel to:
 | Firecrawl returns generic page | Content length very short (< 500 chars), low confidence | Check raw markdown in admin — may need a different URL |
 | Claude misparses sparse content | `confidence: "low"` in history | Tune the system prompt in `lib/parser.ts` |
 | Firecrawl 429 (rate limit) | Multiple scrapers failing simultaneously | Switch `Promise.allSettled` to sequential in `lib/scrapers/index.ts` |
-| KV cold start (no data) | Cards show "Loading…" forever | Go to `/admin` → Trigger Scrape Now |
-| `@vercel/kv` deprecation warning | npm warn on install | Non-blocking. Package still works. If migrating, switch to `@upstash/redis` directly and update `lib/db.ts` |
-| World map not loading | "LOADING MAP DATA" stuck on page | CDN fetch may be blocked. Check browser console. Fallback: bundle the TopoJSON locally in `/public`. |
+| KV cold start (no data) | Cards show "? Monitoring" everywhere | Go to `/admin` → Trigger Scrape Now |
+| `@vercel/kv` deprecation warning | npm warn on install | Non-blocking. Switch to `@upstash/redis` if needed — it's a near drop-in |
+| Matrix overrides lost | Manager edits vanish on refresh | Check KV key `matrix:overrides` exists in Upstash dashboard |
 
 ---
 
@@ -361,15 +411,12 @@ Vercel KV works locally as long as `KV_REST_API_URL` and `KV_REST_API_TOKEN` are
 
 ## Deployment
 
-```bash
-# Preview deploy
-vercel deploy
+The GitHub repo (`stephendotjp/japan-shipping-dashboard`) is connected to Vercel — pushes to `master` trigger automatic production deploys.
 
-# Production deploy
+```bash
+# Manual production deploy (if needed)
 vercel deploy --prod
 ```
-
-The project is linked to Vercel via `.vercel/project.json`. The GitHub repo (`stephendotjp/japan-shipping-dashboard`) is connected — pushes to `master` trigger automatic preview deploys but NOT production deploys (production requires `vercel deploy --prod` or manual promotion).
 
 After any deployment that changes scraping or parsing logic, manually trigger a scrape from `/admin` to verify the pipeline works end-to-end.
 
@@ -381,6 +428,7 @@ After any deployment that changes scraping or parsing logic, manually trigger a 
 - **`/api/admin/trigger` has no auth** — The original `/api/scrape` required `CRON_SECRET`. The admin panel runs in the browser (client-side), and passing secrets to the browser is wrong. A dedicated unauthed trigger route is simpler and safe enough for beta.
 - **`Promise.allSettled` not `Promise.all`** — One failing carrier should never block the others. Each result is independent.
 - **Status is never overwritten on failure** — Stale but accurate data is better than no data. The `stale: true` flag surfaces this in the UI.
-- **`export const dynamic = 'force-dynamic'`** on API routes — Without this, Next.js tries to prerender them at build time, which fails because KV env vars aren't available during the build.
-- **`Globe.tsx` filename** — This file was originally a 3D canvas globe. It was redesigned into a flat D3 SVG map but the filename was kept to avoid updating imports. The component exports `WorldMap` semantics despite the filename.
+- **`export const dynamic = 'force-dynamic'`** on all API routes using KV — Without this, Next.js tries to prerender them at build time, which fails because KV env vars aren't available during the build.
+- **Matrix overrides: full object POST, no server-side merge** — The client holds the full state, so patching adds complexity for no benefit. The full object is small (handful of keys) so replacing it entirely is safe.
+- **Manager notes are per-region, not per-cell** — The shipping manager writes one context note for a destination (e.g. "suspended by compliance"). Per-carrier notes would multiply the UI complexity with little operational benefit.
 - **`@vercel/kv` over direct Upstash SDK** — The original spec called for Vercel KV. It was deprecated after the project started. The package still works against Upstash; migration to `@upstash/redis` is a drop-in if needed.
