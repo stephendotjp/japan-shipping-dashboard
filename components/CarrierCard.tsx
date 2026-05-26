@@ -32,10 +32,10 @@ function StatusChip({ status }: { status: string }) {
       color: cfg.text,
       border: `1px solid ${cfg.border}`,
       borderRadius: '2px',
-      fontSize: '10px',
+      fontSize: '12px',
       fontWeight: 600,
       letterSpacing: '0.1em',
-      padding: '2px 7px',
+      padding: '4px 10px',
       fontFamily: 'var(--font-sans)',
     }}>
       {cfg.label}
@@ -51,7 +51,7 @@ function overallStatus(data: ParsedStatus): Status {
 }
 
 const LABEL: React.CSSProperties = {
-  fontSize: '10px',
+  fontSize: '13px',
   fontWeight: 500,
   letterSpacing: '0.12em',
   color: '#7A7670',
@@ -76,11 +76,11 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        padding: '16px 20px 12px',
+        padding: '22px 28px 16px',
         borderBottom: '1px solid var(--border)',
       }}>
         <div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: '#1E1D1A', marginBottom: 3, letterSpacing: '0.02em' }}>
+          <div style={{ fontSize: '22px', fontWeight: 600, color: '#1E1D1A', marginBottom: 5, letterSpacing: '0.02em' }}>
             {meta.name}
           </div>
           <div style={LABEL}>{meta.type}</div>
@@ -89,7 +89,7 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
       </div>
 
       {/* Route rows */}
-      <div style={{ padding: '12px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
+      <div style={{ padding: '16px 28px', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
         {!data ? (
           <div style={{ ...LABEL, color: '#C0BAB0', paddingTop: 4 }}>NO DATA</div>
         ) : (
@@ -108,15 +108,15 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
 
       {/* Alert strip */}
       <div style={{
-        minHeight: '28px',
-        padding: '6px 20px',
+        minHeight: '42px',
+        padding: '10px 28px',
         background: topAlert ? '#EAE0B8' : '#F0EDE6',
         borderTop: `1px solid ${topAlert ? '#C0A848' : 'var(--border)'}`,
         borderBottom: '1px solid var(--border)',
       }}>
         {topAlert ? (
           <div style={{
-            fontSize: '11px',
+            fontSize: '14px',
             color: '#5E4818',
             letterSpacing: '0.03em',
             lineHeight: 1.4,
@@ -137,7 +137,7 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
       </div>
 
       {/* Footer */}
-      <div style={{ padding: '8px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '12px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {data?.stale ? (
           <span style={{ ...LABEL, color: '#8C7030' }}>DATA STALE</span>
         ) : (

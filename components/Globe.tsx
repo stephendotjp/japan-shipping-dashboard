@@ -84,7 +84,7 @@ export default function WorldMap() {
     <div style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
       <svg
         viewBox="0 0 1400 220"
-        style={{ width: '100%', height: '220px', display: 'block' }}
+        style={{ width: '100%', height: '440px', display: 'block' }}
         xmlns="http://www.w3.org/2000/svg"
       >
         {/* Ocean — institutional pale teal, like a government document map */}

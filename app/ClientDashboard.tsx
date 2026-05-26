@@ -69,7 +69,7 @@ function progressPercent(nextUpdate: string | null): number {
 
 const MONO: React.CSSProperties = { fontFamily: 'var(--font-mono, monospace)' };
 const LABEL: React.CSSProperties = {
-  fontSize: '10px', fontWeight: 500, letterSpacing: '0.12em',
+  fontSize: '13px', fontWeight: 500, letterSpacing: '0.12em',
   color: '#7A7670', textTransform: 'uppercase',
 };
 
@@ -124,31 +124,31 @@ export default function ClientDashboard({ initial }: Props) {
       {/* ── Topbar ── */}
       <div style={{
         background: 'var(--topbar)',
-        padding: '0 28px',
-        height: '54px',
+        padding: '0 36px',
+        height: '76px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexShrink: 0,
       }}>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#EDE8DC', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '20px', fontWeight: 600, color: '#EDE8DC', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
             Japan Shipping Status
           </div>
-          <div style={{ ...LABEL, color: '#5A5650', marginTop: 2 }}>
+          <div style={{ ...LABEL, color: '#5A5650', marginTop: 4 }}>
             International Carrier Monitoring System
           </div>
         </div>
         <div style={{ display: 'flex', gap: 36, alignItems: 'center' }}>
           <div style={{ textAlign: 'right' }}>
             <div style={{ ...LABEL, color: '#5A5650' }}>Last Verified</div>
-            <div style={{ ...MONO, fontSize: '12px', color: '#8A8480', marginTop: 1 }}>
+            <div style={{ ...MONO, fontSize: '14px', color: '#8A8480', marginTop: 2 }}>
               {formatJST(data.lastUpdated)}
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ ...LABEL, color: '#5A5650' }}>Next Cycle</div>
-            <div style={{ ...MONO, fontSize: '14px', fontWeight: 500, color: '#EDE8DC', marginTop: 1 }}>
+            <div style={{ ...MONO, fontSize: '20px', fontWeight: 500, color: '#EDE8DC', marginTop: 2 }}>
               {countdown}
             </div>
           </div>
@@ -196,12 +196,12 @@ export default function ClientDashboard({ initial }: Props) {
         ].map(({ label, value, color }) => (
           <div key={label} style={{
             background: '#F0EDE6',
-            padding: '12px 20px',
+            padding: '18px 28px',
             display: 'flex',
             alignItems: 'baseline',
             gap: 10,
           }}>
-            <span style={{ ...MONO, fontSize: '22px', fontWeight: 500, color }}>{value}</span>
+            <span style={{ ...MONO, fontSize: '40px', fontWeight: 500, color }}>{value}</span>
             <span style={{ ...LABEL, color: '#A49E96' }}>{label}</span>
           </div>
         ))}
@@ -211,8 +211,8 @@ export default function ClientDashboard({ initial }: Props) {
       <div style={{
         background: 'var(--bg)',
         borderTop: '1px solid var(--border)',
-        padding: '0 20px',
-        height: '36px',
+        padding: '0 28px',
+        height: '52px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -224,8 +224,8 @@ export default function ClientDashboard({ initial }: Props) {
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ ...LABEL, color: '#A49E96' }}>Refreshes in</span>
-          <span style={{ ...MONO, fontSize: '11px', color: '#7A7670' }}>{countdown}</span>
-          <div style={{ width: 80, height: 3, background: '#D8D4CC', borderRadius: 0, overflow: 'hidden' }}>
+          <span style={{ ...MONO, fontSize: '14px', color: '#7A7670' }}>{countdown}</span>
+          <div style={{ width: 100, height: 3, background: '#D8D4CC', borderRadius: 0, overflow: 'hidden' }}>
             <div style={{
               height: '100%',
               width: `${progress}%`,
