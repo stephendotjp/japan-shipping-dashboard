@@ -10,11 +10,11 @@ const DESTINATIONS: {
   duration: string;
   delay: string;
 }[] = [
-  { name: 'Los Angeles', coords: [-118.2, 34.1], duration: '3.0s', delay: '0s' },
-  { name: 'London',      coords: [-0.1,   51.5], duration: '4.2s', delay: '0.6s' },
-  { name: 'Singapore',   coords: [103.8,   1.3], duration: '2.6s', delay: '1.0s' },
-  { name: 'Sydney',      coords: [151.2, -33.9], duration: '3.6s', delay: '1.4s' },
-  { name: 'Dubai',       coords: [55.3,   25.2], duration: '3.2s', delay: '0.3s' },
+  { name: 'Los Angeles', coords: [-118.2, 34.1], duration: '5.0s', delay: '0s' },
+  { name: 'London',      coords: [-0.1,   51.5], duration: '7.2s', delay: '1.0s' },
+  { name: 'Singapore',   coords: [103.8,   1.3], duration: '4.4s', delay: '1.8s' },
+  { name: 'Sydney',      coords: [151.2, -33.9], duration: '6.2s', delay: '2.4s' },
+  { name: 'Dubai',       coords: [55.3,   25.2], duration: '5.4s', delay: '0.5s' },
 ];
 
 interface MapPaths {
@@ -81,25 +81,25 @@ export default function WorldMap() {
   }, []);
 
   return (
-    <div style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
+    <div style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
       <svg
         viewBox="0 0 1400 220"
         style={{ width: '100%', height: '220px', display: 'block' }}
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Ocean */}
-        <rect width="1400" height="220" fill="#1C2A3A" />
+        {/* Ocean — institutional pale teal, like a government document map */}
+        <rect width="1400" height="220" fill="#BEC8CA" />
 
         {!mapData && !error && (
-          <text x="700" y="115" textAnchor="middle" fill="rgba(255,255,255,0.15)"
-            fontSize="11" fontFamily="var(--font-mono, monospace)" letterSpacing="0.1em">
+          <text x="700" y="115" textAnchor="middle" fill="#9A9490"
+            fontSize="11" fontFamily="var(--font-mono, monospace)" letterSpacing="0.12em">
             LOADING MAP DATA
           </text>
         )}
 
         {error && (
-          <text x="700" y="115" textAnchor="middle" fill="rgba(255,255,255,0.2)"
-            fontSize="11" fontFamily="var(--font-mono, monospace)" letterSpacing="0.1em">
+          <text x="700" y="115" textAnchor="middle" fill="#9A9490"
+            fontSize="11" fontFamily="var(--font-mono, monospace)" letterSpacing="0.12em">
             MAP UNAVAILABLE
           </text>
         )}
@@ -108,28 +108,28 @@ export default function WorldMap() {
           <>
             {/* Graticule */}
             <path d={mapData.graticulePath} fill="none"
-              stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+              stroke="rgba(0,0,0,0.06)" strokeWidth="0.5" />
 
             {/* Countries */}
             {mapData.countries.map((d, i) => (
-              <path key={i} d={d} fill="#2E4034" stroke="#1A1A18" strokeWidth="0.4" />
+              <path key={i} d={d} fill="#A8B4B0" stroke="#8E9E9A" strokeWidth="0.5" />
             ))}
 
             {/* Japan (highlighted) */}
             {mapData.japanPath && (
-              <path d={mapData.japanPath} fill="#3A2A08" stroke="#D4A017" strokeWidth="1" />
+              <path d={mapData.japanPath} fill="#7A6A30" stroke="#A08A42" strokeWidth="1" />
             )}
 
-            {/* Arcs — dashed, animated outward from Japan */}
+            {/* Arcs — dashed, slow deliberate flow outward from Japan */}
             {mapData.arcs.map((d, i) => d && (
               <path
                 key={i}
                 d={d}
                 fill="none"
-                stroke="#D4A017"
+                stroke="#A08A42"
                 strokeWidth="1"
-                strokeDasharray="8 8"
-                strokeOpacity="0.55"
+                strokeDasharray="6 10"
+                strokeOpacity="0.65"
                 style={{
                   animation: `dashFlow ${DESTINATIONS[i].duration} linear infinite`,
                   animationDelay: DESTINATIONS[i].delay,
@@ -141,7 +141,7 @@ export default function WorldMap() {
             {mapData.destXYs.map(([x, y], i) => (
               x && y ? (
                 <circle key={i} cx={x} cy={y} r="3"
-                  fill="#B8B0A8" stroke="#F5F3EF" strokeWidth="1" />
+                  fill="#8A8480" stroke="#EDEAE2" strokeWidth="1" />
               ) : null
             ))}
 
@@ -150,15 +150,15 @@ export default function WorldMap() {
               <>
                 <circle
                   cx={mapData.japanXY[0]} cy={mapData.japanXY[1]}
-                  r="5" fill="#D4A017" stroke="#F5F3EF" strokeWidth="1.5"
+                  r="5" fill="#A08A42" stroke="#EDEAE2" strokeWidth="1.5"
                 />
                 <text
                   x={mapData.japanXY[0] + 9}
                   y={mapData.japanXY[1] - 7}
-                  fill="#D4A017"
+                  fill="#A08A42"
                   fontSize="10"
                   fontFamily="var(--font-mono, 'IBM Plex Mono', monospace)"
-                  letterSpacing="0.1em"
+                  letterSpacing="0.12em"
                   fontWeight="500"
                 >
                   JPN

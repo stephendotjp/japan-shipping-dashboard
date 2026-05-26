@@ -8,19 +8,19 @@ interface CarrierCardProps {
 }
 
 const CARRIER_META: Record<string, { name: string; type: string; url: string }> = {
-  japanpost: { name: 'Japan Post',  type: 'International Postal Service', url: 'https://www.post.japanpost.jp/int/information/index_en.html' },
-  fedex:     { name: 'FedEx',       type: 'Express & Freight Carrier',    url: 'https://www.fedex.com/en-us/service-alerts.html' },
-  ups:       { name: 'UPS',         type: 'Parcel & Freight Carrier',     url: 'https://www.ups.com/us/en/service-alerts.page' },
-  dhl:       { name: 'DHL',         type: 'International Express',        url: 'https://www.dhl.com/us-en/home/our-divisions/parcel/business-customers/shipping/service-updates.html' },
+  japanpost: { name: 'Japan Post',  type: 'International Postal Authority', url: 'https://www.post.japanpost.jp/int/information/index_en.html' },
+  fedex:     { name: 'FedEx',       type: 'Express Freight Division',       url: 'https://www.fedex.com/en-us/service-alerts.html' },
+  ups:       { name: 'UPS',         type: 'Parcel & Logistics Unit',        url: 'https://www.ups.com/us/en/service-alerts.page' },
+  dhl:       { name: 'DHL',         type: 'International Express Courier',  url: 'https://www.dhl.com/us-en/home/our-divisions/parcel/business-customers/shipping/service-updates.html' },
 };
 
 type Status = 'operational' | 'partial' | 'suspended' | 'unknown';
 
 const STATUS_CHIP: Record<Status, { bg: string; text: string; border: string; label: string }> = {
-  operational: { bg: '#EAF4E5', text: '#2D6B1A', border: '#B4D9A2', label: 'OPERATIONAL' },
-  partial:     { bg: '#FEF3CD', text: '#7A5800', border: '#F0D070', label: 'PARTIAL' },
-  suspended:   { bg: '#FDECEA', text: '#8B1A1A', border: '#F0A0A0', label: 'SUSPENDED' },
-  unknown:     { bg: '#F0EEE8', text: '#888888', border: '#D8D6D0', label: 'UNKNOWN' },
+  operational: { bg: '#D8E8D0', text: '#384E30', border: '#9ABE90', label: 'OPERATIONAL' },
+  partial:     { bg: '#EAE0B8', text: '#5E4818', border: '#C0A848', label: 'PARTIAL' },
+  suspended:   { bg: '#E4D0CC', text: '#702820', border: '#C08888', label: 'SUSPENDED' },
+  unknown:     { bg: '#E0DDD6', text: '#7A7670', border: '#BEBAB0', label: 'UNKNOWN' },
 };
 
 function StatusChip({ status }: { status: string }) {
@@ -53,8 +53,8 @@ function overallStatus(data: ParsedStatus): Status {
 const LABEL: React.CSSProperties = {
   fontSize: '10px',
   fontWeight: 500,
-  letterSpacing: '0.1em',
-  color: '#888',
+  letterSpacing: '0.12em',
+  color: '#7A7670',
   textTransform: 'uppercase',
   fontFamily: 'var(--font-sans)',
 };
@@ -66,7 +66,7 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
 
   return (
     <div style={{
-      background: '#fff',
+      background: '#F0EDE6',
       display: 'flex',
       flexDirection: 'column',
       minHeight: 0,
@@ -80,7 +80,7 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
         borderBottom: '1px solid var(--border)',
       }}>
         <div>
-          <div style={{ fontSize: '16px', fontWeight: 500, color: '#1A1A18', marginBottom: 3 }}>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: '#1E1D1A', marginBottom: 3, letterSpacing: '0.02em' }}>
             {meta.name}
           </div>
           <div style={LABEL}>{meta.type}</div>
@@ -91,7 +91,7 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
       {/* Route rows */}
       <div style={{ padding: '12px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 9 }}>
         {!data ? (
-          <div style={{ ...LABEL, color: '#ccc', paddingTop: 4 }}>NO DATA</div>
+          <div style={{ ...LABEL, color: '#C0BAB0', paddingTop: 4 }}>NO DATA</div>
         ) : (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -110,15 +110,15 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
       <div style={{
         minHeight: '28px',
         padding: '6px 20px',
-        background: topAlert ? '#FFFBF0' : 'transparent',
-        borderTop: `1px solid ${topAlert ? '#F0D070' : 'var(--border)'}`,
+        background: topAlert ? '#EAE0B8' : '#F0EDE6',
+        borderTop: `1px solid ${topAlert ? '#C0A848' : 'var(--border)'}`,
         borderBottom: '1px solid var(--border)',
       }}>
         {topAlert ? (
           <div style={{
             fontSize: '11px',
-            color: '#7A5800',
-            letterSpacing: '0.02em',
+            color: '#5E4818',
+            letterSpacing: '0.03em',
             lineHeight: 1.4,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -126,20 +126,20 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
           }}>
             {topAlert.title}
             {(data?.activeAlerts?.length ?? 0) > 1 && (
-              <span style={{ color: '#B08000', marginLeft: 6 }}>
+              <span style={{ color: '#8C7030', marginLeft: 6 }}>
                 +{(data?.activeAlerts?.length ?? 1) - 1} more
               </span>
             )}
           </div>
         ) : (
-          <div style={{ ...LABEL, color: '#C8C4BC' }}>NO ACTIVE ALERTS</div>
+          <div style={{ ...LABEL, color: '#C0BAB0' }}>NO ACTIVE ALERTS</div>
         )}
       </div>
 
       {/* Footer */}
       <div style={{ padding: '8px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {data?.stale ? (
-          <span style={{ ...LABEL, color: '#B08000' }}>DATA STALE</span>
+          <span style={{ ...LABEL, color: '#8C7030' }}>DATA STALE</span>
         ) : (
           <span />
         )}
@@ -147,7 +147,7 @@ export default function CarrierCard({ carrierKey, data }: CarrierCardProps) {
           href={meta.url}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ ...LABEL, color: '#888', textDecoration: 'underline', textDecorationColor: '#D8D6D0' }}
+          style={{ ...LABEL, color: '#7A7670', textDecoration: 'underline', textDecorationColor: '#C8C4BA' }}
         >
           SOURCE
         </a>

@@ -1,9 +1,13 @@
 :root {
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
-  --bg: #F5F3EF;
-  --border: #D8D6D0;
-  --topbar: #1A1A18;
+  --bg: #EDEAE2;
+  --bg-card: #F0EDE6;
+  --topbar: #252420;
+  --border: #C8C4BA;
+  --text: #1E1D1A;
+  --text-muted: #7A7670;
+  --text-dim: #A49E96;
 }
 
 *, *::before, *::after {
@@ -16,7 +20,7 @@ html, body {
   height: 100%;
   background: var(--bg);
   font-family: var(--font-sans);
-  color: #1A1A18;
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
 
