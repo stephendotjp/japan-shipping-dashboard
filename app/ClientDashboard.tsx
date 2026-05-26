@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import CarrierCard from '@/components/CarrierCard';
 import { ParsedStatus } from '@/lib/db';
 
-const Globe = dynamic(() => import('@/components/Globe'), { ssr: false });
+const WorldMap = dynamic(() => import('@/components/Globe'), { ssr: false });
 
 type CarrierData = (ParsedStatus & { stale: boolean; staleSince: string | null }) | null;
 
@@ -15,17 +15,29 @@ interface StatusResponse {
   carriers: Record<string, CarrierData>;
 }
 
-interface Props {
-  initial: StatusResponse;
+interface Props { initial: StatusResponse; }
+
+const CARRIER_KEYS = ['japanpost', 'fedex', 'ups', 'dhl'];
+type StatusLevel = 'operational' | 'partial' | 'suspended' | 'unknown';
+
+function overallStatus(d: ParsedStatus): StatusLevel {
+  if (d.usDestinationStatus === 'suspended' || d.japanOriginStatus === 'suspended') return 'suspended';
+  if (d.usDestinationStatus === 'partial'   || d.japanOriginStatus === 'partial')   return 'partial';
+  if (d.usDestinationStatus === 'operational' && d.japanOriginStatus === 'operational') return 'operational';
+  return 'unknown';
 }
 
-function computeUSStatus(carriers: Record<string, CarrierData>): 'operational' | 'partial' | 'suspended' | 'unknown' {
-  const statuses = Object.values(carriers).filter(Boolean).map((c) => c!.usDestinationStatus);
-  if (statuses.length === 0) return 'unknown';
-  if (statuses.some((s) => s === 'suspended')) return 'suspended';
-  if (statuses.some((s) => s === 'partial')) return 'partial';
-  if (statuses.every((s) => s === 'operational')) return 'operational';
-  return 'unknown';
+function computeSummary(carriers: Record<string, CarrierData>) {
+  let operational = 0, partial = 0, unknown = 0, alerts = 0;
+  for (const d of Object.values(carriers)) {
+    if (!d) { unknown++; continue; }
+    const s = overallStatus(d);
+    if (s === 'operational') operational++;
+    else if (s === 'partial') partial++;
+    else unknown++;
+    alerts += d.activeAlerts?.length ?? 0;
+  }
+  return { operational, partial, unknown, alerts };
 }
 
 function formatCountdown(nextUpdate: string | null): string {
@@ -39,36 +51,49 @@ function formatCountdown(nextUpdate: string | null): string {
 }
 
 function formatJST(iso: string | null): string {
-  if (!iso) return 'Never';
+  if (!iso) return '—';
   return new Date(iso).toLocaleString('en-US', {
-    timeZone: 'Asia/Tokyo',
-    month: 'short', day: 'numeric',
+    timeZone: 'Asia/Tokyo', month: 'short', day: 'numeric',
     hour: '2-digit', minute: '2-digit', hour12: false,
   }) + ' JST';
 }
 
-const CARRIER_KEYS = ['japanpost', 'fedex', 'ups', 'dhl'];
+function progressPercent(nextUpdate: string | null): number {
+  if (!nextUpdate) return 0;
+  const next = new Date(nextUpdate).getTime();
+  const total = 6 * 60 * 60 * 1000; // 6h window between updates
+  const remaining = next - Date.now();
+  if (remaining <= 0) return 100;
+  return Math.max(0, Math.min(100, ((total - remaining) / total) * 100));
+}
+
+const MONO: React.CSSProperties = { fontFamily: 'var(--font-mono, monospace)' };
+const LABEL: React.CSSProperties = {
+  fontSize: '10px', fontWeight: 500, letterSpacing: '0.1em',
+  color: '#888', textTransform: 'uppercase',
+};
 
 export default function ClientDashboard({ initial }: Props) {
   const [data, setData] = useState<StatusResponse>(initial);
   const [countdown, setCountdown] = useState('--:--:--');
-  const [triggeredInitialScrape, setTriggeredInitialScrape] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [triggered, setTriggered] = useState(false);
 
   const fetchStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/status');
       if (res.ok) setData(await res.json());
-    } catch { /* retain existing */ }
+    } catch { /* retain */ }
   }, []);
 
   useEffect(() => {
-    if (triggeredInitialScrape) return;
-    const hasNoData = Object.values(initial.carriers).every((c) => c === null);
-    if (hasNoData) {
-      setTriggeredInitialScrape(true);
+    if (triggered) return;
+    const empty = Object.values(initial.carriers).every(c => c === null);
+    if (empty) {
+      setTriggered(true);
       fetch('/api/admin/trigger', { method: 'POST' }).catch(() => {});
     }
-  }, [initial.carriers, triggeredInitialScrape]);
+  }, [initial.carriers, triggered]);
 
   useEffect(() => {
     const interval = setInterval(fetchStatus, 5 * 60 * 1000);
@@ -76,86 +101,141 @@ export default function ClientDashboard({ initial }: Props) {
   }, [fetchStatus]);
 
   useEffect(() => {
-    const tick = () => setCountdown(formatCountdown(data.nextUpdate));
+    const tick = () => {
+      setCountdown(formatCountdown(data.nextUpdate));
+      setProgress(progressPercent(data.nextUpdate));
+    };
     tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, [data.nextUpdate]);
 
-  const usStatus = computeUSStatus(data.carriers);
+  const summary = computeSummary(data.carriers);
 
   return (
     <div style={{
-      background: '#020812',
+      background: 'var(--bg)',
       minHeight: '100vh',
-      color: '#fff',
-      fontFamily: '"Inter", "Segoe UI", system-ui, sans-serif',
       display: 'flex',
       flexDirection: 'column',
+      fontFamily: 'var(--font-sans)',
     }}>
-      {/* Header */}
+
+      {/* ── Topbar ── */}
       <div style={{
+        background: 'var(--topbar)',
+        padding: '0 28px',
+        height: '54px',
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '16px 32px',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(0,0,0,0.4)',
+        justifyContent: 'space-between',
         flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{
-            width: 10, height: 10, borderRadius: '50%',
-            background: '#ffd700',
-            boxShadow: '0 0 10px #ffd700',
-          }} />
-          <span style={{ fontSize: '1.3rem', fontWeight: 800, letterSpacing: '0.05em', color: '#e8f0ff' }}>
-            JAPAN SHIPPING STATUS
-          </span>
+        <div>
+          <div style={{ fontSize: '15px', fontWeight: 600, color: '#F5F3EF', letterSpacing: '0.02em' }}>
+            Japan Shipping Status
+          </div>
+          <div style={{ ...LABEL, color: '#666', marginTop: 1 }}>
+            International carrier monitor
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 40, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 36, alignItems: 'center' }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.7rem', color: '#445', letterSpacing: '0.08em', marginBottom: 2 }}>LAST UPDATED</div>
-            <div style={{ fontSize: '0.9rem', color: '#aabbcc', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ ...LABEL, color: '#555' }}>Last updated</div>
+            <div style={{ ...MONO, fontSize: '12px', color: '#999', marginTop: 1 }}>
               {formatJST(data.lastUpdated)}
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.7rem', color: '#445', letterSpacing: '0.08em', marginBottom: 2 }}>NEXT UPDATE</div>
-            <div style={{ fontSize: '1.1rem', color: '#4a9eff', fontWeight: 700, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>
+            <div style={{ ...LABEL, color: '#555' }}>Next update</div>
+            <div style={{ ...MONO, fontSize: '14px', fontWeight: 500, color: '#F5F3EF', marginTop: 1 }}>
               {countdown}
             </div>
           </div>
-          <a href="/admin" style={{ fontSize: '0.72rem', color: '#334', textDecoration: 'none', padding: '6px 12px', border: '1px solid #223', borderRadius: 6 }}>
+          <a
+            href="/admin"
+            style={{ ...LABEL, color: '#555', padding: '5px 10px', border: '1px solid #333', borderRadius: '2px' }}
+          >
             Admin
           </a>
         </div>
       </div>
 
-      {/* Globe */}
-      <div style={{
-        flex: '1 1 0',
-        minHeight: 0,
-        padding: '12px 24px 8px',
-        display: 'flex',
-      }}>
-        <div style={{ width: '100%', borderRadius: 12, overflow: 'hidden' }}>
-          <Globe usStatus={usStatus} />
-        </div>
-      </div>
+      {/* ── World map panel ── */}
+      <WorldMap />
 
-      {/* Carrier cards — 4 in a row */}
+      {/* ── Carrier cards ── */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 12,
-        padding: '8px 24px 20px',
-        flexShrink: 0,
+        borderTop: '1px solid var(--border)',
+        borderLeft: '1px solid var(--border)',
+        borderRight: '1px solid var(--border)',
+        margin: '0',
+        background: 'var(--border)',
+        gap: '1px',
       }}>
-        {CARRIER_KEYS.map((key) => (
+        {CARRIER_KEYS.map(key => (
           <CarrierCard key={key} carrierKey={key} data={data.carriers[key] ?? null} />
         ))}
       </div>
+
+      {/* ── Summary bar ── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        background: 'var(--border)',
+        gap: '1px',
+        borderBottom: '1px solid var(--border)',
+      }}>
+        {[
+          { label: 'Operational', value: summary.operational, color: '#2D6B1A' },
+          { label: 'Partial',     value: summary.partial,     color: '#7A5800' },
+          { label: 'Unknown',     value: summary.unknown,     color: '#888' },
+          { label: 'Active Alerts', value: summary.alerts,   color: summary.alerts > 0 ? '#8B1A1A' : '#888' },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{
+            background: '#fff',
+            padding: '12px 20px',
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 10,
+          }}>
+            <span style={{ ...MONO, fontSize: '22px', fontWeight: 500, color }}>{value}</span>
+            <span style={{ ...LABEL, color: '#aaa' }}>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Bottom bar ── */}
+      <div style={{
+        background: '#fff',
+        borderTop: '1px solid var(--border)',
+        padding: '0 20px',
+        height: '36px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexShrink: 0,
+        marginTop: 'auto',
+      }}>
+        <span style={{ ...LABEL, color: '#C0BCB6' }}>
+          Data: Firecrawl scrape + Claude AI parse · Refreshes at 06:00 &amp; 18:00 JST
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ ...LABEL, color: '#C0BCB6' }}>Refreshes in</span>
+          <span style={{ ...MONO, fontSize: '11px', color: '#888' }}>{countdown}</span>
+          <div style={{ width: 80, height: 3, background: '#ECEAE4', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${progress}%`,
+              background: '#1A1A18',
+              transition: 'width 1s linear',
+            }} />
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
