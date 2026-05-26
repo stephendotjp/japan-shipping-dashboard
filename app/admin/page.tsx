@@ -89,10 +89,7 @@ export default function AdminPage() {
     setScraping(true);
     setScrapeResult(null);
     try {
-      const res = await fetch('/api/scrape', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET ?? ''}` },
-      });
+      const res = await fetch('/api/admin/trigger', { method: 'POST' });
       const json = await res.json();
       setScrapeResult(JSON.stringify(json, null, 2));
       await loadData();
