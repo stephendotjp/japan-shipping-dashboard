@@ -328,3 +328,110 @@ a { color: inherit; text-decoration: none; }
   border-color: #18181b;
 }
 .modal-btn-primary:hover { background: #3f3f46; border-color: #3f3f46; }
+
+/* ── Shipping rules layer ── */
+.rules-section { margin-bottom: 18px; }
+
+.rules-banners { display: flex; flex-direction: column; gap: 6px; }
+.banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-md);
+  font-size: 13px; line-height: 1.5;
+}
+.banner-warn   { background: #fffbeb; border: 0.5px solid #f59e0b; color: #78350f; }
+.banner-danger { background: #fff1f2; border: 0.5px solid #ef4444; color: #991b1b; }
+.banner strong { font-weight: 500; }
+
+/* destination card grid */
+.dest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.dest-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color 0.1s;
+  outline: none;
+}
+.dest-card:hover  { border-color: rgba(0,0,0,.18); }
+.dest-card:focus-visible { box-shadow: 0 0 0 2px #6366f1; }
+.dest-card.active { border: 1px solid rgba(0,0,0,.28); }
+
+.dest-name     { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; line-height: 1.35; }
+.dest-subtitle { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 8px; line-height: 1.4; }
+.dest-chips    { display: flex; flex-wrap: wrap; gap: 4px; }
+.dest-chip     { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px; }
+.chip-ok     { background: #dcfce7; color: #15803d; }
+.chip-warn   { background: #fef3c7; color: #92400e; }
+.chip-danger { background: #fee2e2; color: #991b1b; }
+.chip-gray   { background: #f1f5f9; color: #475569; }
+
+/* rules panel */
+.rules-panel {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.rules-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-background-secondary);
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+.rules-panel-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.rules-panel-close {
+  background: none; border: none;
+  font-size: 13px; color: var(--color-text-tertiary);
+  cursor: pointer; padding: 3px 7px;
+  border-radius: 4px; line-height: 1;
+  font-family: var(--font-sans);
+  transition: background 0.1s, color 0.1s;
+}
+.rules-panel-close:hover { background: var(--color-border-secondary); color: var(--color-text-primary); }
+
+.rules-block-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 14px;
+}
+.rule-block {
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 8px;
+  padding: 12px;
+}
+.rule-block.full       { grid-column: 1 / -1; }
+.rule-block.danger-bar { background: #fff1f2; border-color: #ef4444; }
+.rule-block.info-bar   { background: #fffbeb; border-color: #f59e0b; }
+
+.rule-block-label {
+  font-size: 11px; font-weight: 500;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: 8px;
+}
+.rule-row { display: flex; gap: 10px; align-items: baseline; font-size: 13px; line-height: 1.5; }
+.rule-row + .rule-row  { border-top: 0.5px solid var(--color-border-tertiary); margin-top: 5px; padding-top: 5px; }
+.rule-key {
+  font-size: 12px; font-weight: 500;
+  color: var(--color-text-secondary);
+  flex: 0 0 auto; min-width: 110px; max-width: 160px;
+  line-height: 1.45;
+}
+.rule-value { color: var(--color-text-primary); flex: 1; }
+.rv-ok     { color: #15803d; font-weight: 500; }
+.rv-warn   { color: #b45309; font-weight: 500; }
+.rv-danger { color: #991b1b; font-weight: 500; }
+
+@media (max-width: 640px) {
+  .rules-block-grid { grid-template-columns: 1fr; }
+}

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import CarrierCard from '@/components/CarrierCard';
 import RoutingMatrix from '@/components/RoutingMatrix';
+import ShippingRules from '@/components/ShippingRules';
 import { ParsedStatus } from '@/lib/db';
 
 type CarrierData = (ParsedStatus & { stale: boolean; staleSince: string | null }) | null;
@@ -135,6 +136,9 @@ export default function ClientDashboard({ initial }: Props) {
           <CarrierCard key={key} carrierKey={key} data={data.carriers[key] ?? null} />
         ))}
       </div>
+
+      {/* ── Shipping rules reference ── */}
+      <ShippingRules />
 
       {/* ── Routing matrix ── */}
       <div className="section-label">Can we ship there right now?</div>
