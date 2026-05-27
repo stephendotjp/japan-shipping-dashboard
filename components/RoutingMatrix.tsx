@@ -50,6 +50,63 @@ interface MatrixData {
   notes: Record<string, string>;
 }
 
+function FlagIcon({ name }: { name: string }) {
+  const flagStyle = {
+    display: 'inline-block' as const,
+    verticalAlign: 'middle' as const,
+    borderRadius: 2,
+    border: '0.5px solid rgba(0,0,0,0.12)',
+  };
+  const globeStyle = { display: 'inline-block' as const, verticalAlign: 'middle' as const };
+
+  if (name === 'USA / Canada') {
+    return (
+      <svg width="22" height="15" viewBox="0 0 22 15" style={flagStyle}>
+        <rect width="22" height="15" fill="#B22234" />
+        {[1,3,5,7,9,11].map(n => (
+          <rect key={n} y={n * 15/13} width="22" height={15/13} fill="white" />
+        ))}
+        <rect width="8.8" height={7 * 15/13} fill="#3C3B6E" />
+      </svg>
+    );
+  }
+  if (name === 'Europe') {
+    return (
+      <svg width="22" height="15" viewBox="0 0 22 15" style={flagStyle}>
+        <rect width="22" height="15" fill="#003399" />
+        {Array.from({ length: 12 }, (_, i) => {
+          const a = (i * 30 - 90) * Math.PI / 180;
+          return (
+            <circle key={i}
+              cx={11 + 4.5 * Math.cos(a)}
+              cy={7.5 + 4.5 * Math.sin(a)}
+              r={0.85}
+              fill="#FFD700"
+            />
+          );
+        })}
+      </svg>
+    );
+  }
+  if (name === 'Russia / Belarus') {
+    return (
+      <svg width="22" height="15" viewBox="0 0 22 15" style={flagStyle}>
+        <rect width="22" height="5" fill="white" />
+        <rect y="5" width="22" height="5" fill="#0039A6" />
+        <rect y="10" width="22" height="5" fill="#D52B1E" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" style={globeStyle}>
+      <circle cx="10" cy="10" r="9.5" fill="#4a90d9" />
+      <ellipse cx="10" cy="10" rx="4" ry="9.5" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.8" />
+      <ellipse cx="10" cy="10" rx="9.5" ry="3.5" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.8" />
+      <circle cx="10" cy="10" r="9.5" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" />
+    </svg>
+  );
+}
+
 function getOverall(data: ParsedStatus): string {
   if (data.usDestinationStatus === 'suspended' || data.japanOriginStatus === 'suspended') return 'suspended';
   if (data.usDestinationStatus === 'partial' || data.japanOriginStatus === 'partial') return 'partial';
@@ -277,7 +334,7 @@ export default function RoutingMatrix({ carriers }: Props) {
                   onClick={() => openEditor(region.name)}
                 >
                   <td>
-                    <span className="region-flag">{region.flag}</span>
+                    <span className="region-flag"><FlagIcon name={region.name} /></span>
                     <span className="region-name">{region.name}</span>
                   </td>
                   {effectiveDots.map((dot, ci) => (
@@ -304,7 +361,7 @@ export default function RoutingMatrix({ carriers }: Props) {
         <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setEditing(null); }}>
           <div className="modal-box">
             <div className="modal-title">
-              <span className="modal-flag">{editingRegion.flag}</span>
+              <span className="modal-flag"><FlagIcon name={editingRegion.name} /></span>
               {editingRegion.name}
             </div>
 
