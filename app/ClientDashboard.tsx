@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 type CarrierStatus = 'ok' | 'warn' | 'no' | 'q';
 
 interface Carrier { name: string; s: CarrierStatus; note: string; }
-interface DestData { flag: string; name: string; region: string; carriers: Carrier[]; rules: string[]; notes: string; }
+interface DestData { flagCode: string | null; name: string; region: string; carriers: Carrier[]; rules: string[]; notes: string; }
 
 const SC: Record<CarrierStatus, { wrapCls: string; label: string; badgeCls: string; pillCls: string; pillLabel: string }> = {
   ok:   { wrapCls: 's-ok',   label: 'OK',        badgeCls: 'badge-ok',   pillCls: 'op-ok',   pillLabel: 'Operational' },
@@ -24,7 +24,7 @@ const REGIONS: Array<{ label: string; ids: string[] }> = [
 
 const INITIAL_DATA: Record<string, DestData> = {
   usa: {
-    flag: '🇺🇸', name: 'USA', region: 'North America',
+    flagCode: 'us', name: 'USA', region: 'North America',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'Limited resumption April 2026 — verify per item type.' },
       { name: 'FedEx',      s: 'warn', note: 'DDP only — confirm terms before booking.' },
@@ -39,7 +39,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Japan Post availability to the US is inconsistent. Default to UPS or DHL unless JP is confirmed.',
   },
   canada: {
-    flag: '🇨🇦', name: 'Canada', region: 'North America',
+    flagCode: 'ca', name: 'Canada', region: 'North America',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -53,7 +53,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   mexico: {
-    flag: '🇲🇽', name: 'Mexico', region: 'North America',
+    flagCode: 'mx', name: 'Mexico', region: 'North America',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — RFC or CURP required.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational — RFC or CURP required.' },
@@ -69,7 +69,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Mexico is a high-volume destination. Collect RFC or CURP at checkout to avoid delays.',
   },
   uk: {
-    flag: '🇬🇧', name: 'UK', region: 'Europe',
+    flagCode: 'gb', name: 'UK', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -84,7 +84,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   germany: {
-    flag: '🇩🇪', name: 'Germany', region: 'Europe',
+    flagCode: 'de', name: 'Germany', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -99,7 +99,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   france: {
-    flag: '🇫🇷', name: 'France', region: 'Europe',
+    flagCode: 'fr', name: 'France', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -113,7 +113,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   spain: {
-    flag: '🇪🇸', name: 'Spain', region: 'Europe',
+    flagCode: 'es', name: 'Spain', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'Check JP advisory — suspensions have applied.' },
       { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
@@ -127,7 +127,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Spain has periodically appeared on JP suspension lists. Always confirm JP on day of booking.',
   },
   italy: {
-    flag: '🇮🇹', name: 'Italy', region: 'Europe',
+    flagCode: 'it', name: 'Italy', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'Check JP advisory — suspensions have applied.' },
       { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
@@ -142,7 +142,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Italy has periodically appeared on JP suspension lists. Always confirm JP on day of booking.',
   },
   benelux: {
-    flag: '🇧🇪', name: 'Belgium / Netherlands', region: 'Europe',
+    flagCode: 'be', name: 'Belgium / Netherlands', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -156,7 +156,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   sweden: {
-    flag: '🇸🇪', name: 'Sweden', region: 'Europe',
+    flagCode: 'se', name: 'Sweden', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -170,7 +170,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   norway: {
-    flag: '🇳🇴', name: 'Norway', region: 'Europe — non-EU',
+    flagCode: 'no', name: 'Norway', region: 'Europe — non-EU',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -185,7 +185,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Norway processes customs independently. Do not apply EU IOSS to Norwegian orders.',
   },
   denmark: {
-    flag: '🇩🇰', name: 'Denmark', region: 'Europe',
+    flagCode: 'dk', name: 'Denmark', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -199,7 +199,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   finland: {
-    flag: '🇫🇮', name: 'Finland', region: 'Europe',
+    flagCode: 'fi', name: 'Finland', region: 'Europe',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -213,7 +213,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   brazil: {
-    flag: '🇧🇷', name: 'Brazil', region: 'Latin America',
+    flagCode: 'br', name: 'Brazil', region: 'Latin America',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — CPF or CNPJ required.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational — CPF or CNPJ required.' },
@@ -228,7 +228,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Validate CPF/CNPJ format before submitting. Invalid numbers cause automatic rejection.',
   },
   latam: {
-    flag: '🌎', name: 'Latin America (other)', region: 'Latin America — excl. Brazil & Mexico',
+    flagCode: null, name: 'Latin America (other)', region: 'Latin America — excl. Brazil & Mexico',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — verify per country.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -242,7 +242,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Brazil and Mexico are listed separately due to mandatory tax ID requirements.',
   },
   australia: {
-    flag: '🇦🇺', name: 'Australia', region: 'Asia Pacific',
+    flagCode: 'au', name: 'Australia', region: 'Asia Pacific',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -256,7 +256,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   china: {
-    flag: '🇨🇳', name: 'China', region: 'Asia Pacific',
+    flagCode: 'cn', name: 'China', region: 'Asia Pacific',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'Check advisory — periodic delays and restrictions.' },
       { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
@@ -271,7 +271,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'China customs regulations change frequently. Confirm current requirements per shipment category.',
   },
   korea: {
-    flag: '🇰🇷', name: 'South Korea', region: 'Asia Pacific',
+    flagCode: 'kr', name: 'South Korea', region: 'Asia Pacific',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -285,7 +285,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   taiwan: {
-    flag: '🇹🇼', name: 'Taiwan', region: 'Asia Pacific',
+    flagCode: 'tw', name: 'Taiwan', region: 'Asia Pacific',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -299,7 +299,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   singapore: {
-    flag: '🇸🇬', name: 'Singapore', region: 'Asia Pacific',
+    flagCode: 'sg', name: 'Singapore', region: 'Asia Pacific',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -313,7 +313,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   apac: {
-    flag: '🌏', name: 'Asia Pacific (other)', region: 'Asia Pacific — excl. listed',
+    flagCode: null, name: 'Asia Pacific (other)', region: 'Asia Pacific — excl. listed',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'Partial — check JP advisory per country.' },
       { name: 'FedEx',      s: 'q',    note: 'Monitoring — verify before booking.' },
@@ -327,7 +327,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Status changes frequently. Check carrier advisory pages before booking.',
   },
   mideast: {
-    flag: '🌍', name: 'Middle East', region: 'Middle East',
+    flagCode: null, name: 'Middle East', region: 'Middle East',
     carriers: [
       { name: 'Japan Post', s: 'no', note: 'Service suspended.' },
       { name: 'FedEx',      s: 'no', note: 'Suspended — actively adjusting to situation.' },
@@ -341,7 +341,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'All four carriers suspended or significantly impacted. No exceptions without ops manager approval.',
   },
   russia: {
-    flag: '🇷🇺', name: 'Russia / Belarus', region: 'Eastern Europe',
+    flagCode: 'ru', name: 'Russia / Belarus', region: 'Eastern Europe',
     carriers: [
       { name: 'Japan Post', s: 'no', note: 'Service suspended.' },
       { name: 'FedEx',      s: 'no', note: 'Suspended indefinitely.' },
@@ -355,6 +355,68 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'FedEx suspension is indefinite. Do not accept or hold orders for Russia or Belarus.',
   },
 };
+
+// ── Flag image (uses flagcdn.com to avoid Windows emoji rendering issues) ──
+
+function FlagImg({ code, w = 20 }: { code: string | null; w?: number }) {
+  if (!code) {
+    return (
+      <svg viewBox="0 0 20 15" width={w} height={Math.round(w * 0.75)} aria-hidden="true">
+        <rect width="20" height="15" rx="2" fill="#94a3b8" />
+        <circle cx="10" cy="7.5" r="4" fill="none" stroke="white" strokeWidth="1.2" />
+        <line x1="10" y1="3.5" x2="10" y2="11.5" stroke="white" strokeWidth="0.9" />
+        <ellipse cx="10" cy="7.5" rx="2.2" ry="4" fill="none" stroke="white" strokeWidth="0.9" />
+        <line x1="6" y1="7.5" x2="14" y2="7.5" stroke="white" strokeWidth="0.9" />
+      </svg>
+    );
+  }
+  return (
+    <img
+      src={`https://flagcdn.com/w${w}/${code}.png`}
+      srcSet={`https://flagcdn.com/w${w * 2}/${code}.png 2x`}
+      width={w}
+      height={Math.round(w * 0.75)}
+      alt={code.toUpperCase()}
+      style={{ display: 'block', borderRadius: 2 }}
+    />
+  );
+}
+
+// ── Carrier SVG logos ──
+
+const CARRIER_LOGOS: Record<string, React.ReactNode> = {
+  'Japan Post': (
+    <svg viewBox="0 0 72 18" width="72" height="18" aria-hidden="true">
+      <rect width="72" height="18" rx="2" fill="#E60012" />
+      <text x="36" y="13" textAnchor="middle" fill="white" fontSize="8.5" fontWeight="700"
+        fontFamily="system-ui, Arial, sans-serif" letterSpacing="0.6">JAPAN POST</text>
+    </svg>
+  ),
+  'FedEx': (
+    <svg viewBox="0 0 50 18" width="50" height="18" aria-hidden="true">
+      <text x="1" y="14" fill="#4D148C" fontSize="15" fontWeight="800"
+        fontFamily="system-ui, Arial, sans-serif">Fed</text>
+      <text x="28" y="14" fill="#FF6600" fontSize="15" fontWeight="800"
+        fontFamily="system-ui, Arial, sans-serif">Ex</text>
+    </svg>
+  ),
+  'UPS': (
+    <svg viewBox="0 0 36 18" width="36" height="18" aria-hidden="true">
+      <rect width="36" height="18" rx="2" fill="#351C15" />
+      <text x="18" y="13" textAnchor="middle" fill="#FFB500" fontSize="10" fontWeight="700"
+        fontFamily="system-ui, Arial, sans-serif" letterSpacing="1.5">UPS</text>
+    </svg>
+  ),
+  'DHL': (
+    <svg viewBox="0 0 36 18" width="36" height="18" aria-hidden="true">
+      <rect width="36" height="18" rx="2" fill="#FFCC00" />
+      <text x="18" y="13" textAnchor="middle" fill="#D40511" fontSize="10" fontWeight="700"
+        fontFamily="system-ui, Arial, sans-serif" letterSpacing="1.5">DHL</text>
+    </svg>
+  ),
+};
+
+// ── Helpers ──
 
 function overallStatus(carriers: Carrier[]): CarrierStatus {
   const ss = carriers.map(c => c.s);
@@ -393,7 +455,9 @@ function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddR
   return (
     <div className="dp" ref={containerRef}>
       <div className="dest-heading">
-        <span className="dest-flag-lg">{dest.flag}</span>
+        <span className="dest-flag-lg">
+          <FlagImg code={dest.flagCode} w={40} />
+        </span>
         <div>
           <div className="dest-name">{dest.name}</div>
           <div className="dest-region-sub">{dest.region}</div>
@@ -410,7 +474,10 @@ function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddR
           <tbody>
             {dest.carriers.map((c, ci) => (
               <tr key={ci}>
-                <td className="ct-name">{c.name}</td>
+                <td className="ct-logo">
+                  {CARRIER_LOGOS[c.name] ?? <span className="ct-name-fallback">{c.name}</span>}
+                  <span className="sr-only">{c.name}</span>
+                </td>
                 <td className="ct-note">
                   <textarea
                     className="rule-text"
@@ -539,17 +606,6 @@ export default function Dashboard() {
         <div className="updated">Updated May 27, 2026</div>
       </div>
 
-      <div className="notices">
-        <div className="notice n-warn">
-          <i className="ti ti-alert-triangle" style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
-          Insurance required on all orders ¥50,000+ — always use real declared value
-        </div>
-        <div className="notice n-danger">
-          <i className="ti ti-ban" style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
-          Never use as goods description: cosmetics · medicine · food · drinks · toys
-        </div>
-      </div>
-
       <div className="body">
         <div className="sidebar">
           <div className="dest-list">
@@ -566,7 +622,9 @@ export default function Dashboard() {
                       className={`dest-btn${currentId === id ? ' active' : ''}`}
                       onClick={() => setCurrentId(id)}
                     >
-                      <span className="dflag">{d.flag}</span>
+                      <span className="dflag">
+                        <FlagImg code={d.flagCode} w={20} />
+                      </span>
                       <span className="dname">{d.name}</span>
                       <span className={`dbadge ${sc.badgeCls}`}>{sc.label}</span>
                     </button>
