@@ -2,16 +2,86 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+type Lang = 'en' | 'ja' | 'fr';
 type CarrierStatus = 'ok' | 'warn' | 'no' | 'q';
 
 interface Carrier { name: string; s: CarrierStatus; note: string; }
 interface DestData { flagCode: string | null; name: string; region: string; carriers: Carrier[]; rules: string[]; notes: string; }
 
-const SC: Record<CarrierStatus, { wrapCls: string; label: string; badgeCls: string; pillCls: string; pillLabel: string }> = {
-  ok:   { wrapCls: 's-ok',   label: 'OK',        badgeCls: 'badge-ok',   pillCls: 'op-ok',   pillLabel: 'Operational' },
-  warn: { wrapCls: 's-warn', label: 'Caution',    badgeCls: 'badge-warn', pillCls: 'op-warn', pillLabel: 'Check before booking' },
-  no:   { wrapCls: 's-no',   label: 'Suspended',  badgeCls: 'badge-no',   pillCls: 'op-no',   pillLabel: 'Do not ship' },
-  q:    { wrapCls: 's-q',    label: 'Monitor',    badgeCls: 'badge-q',    pillCls: 'op-warn', pillLabel: 'Monitor' },
+// ── Translations ──────────────────────────────────────────────────
+
+interface Translation {
+  title: string; subtitle: string; updated: string;
+  carrierStatus: string; clickToChange: string;
+  countryRules: string; clickToEdit: string;
+  notes: string; clickNotesToEdit: string;
+  addRule: string; notesPlaceholder: string; selectDest: string;
+  regions: Record<string, string>;
+  sc: Record<CarrierStatus, { label: string; pillLabel: string }>;
+  options: Record<CarrierStatus, string>;
+}
+
+const TRANSLATIONS: Record<Lang, Translation> = {
+  en: {
+    title: 'Japan shipping ops', subtitle: 'Carrier & destination guide',
+    updated: 'Updated May 27, 2026',
+    carrierStatus: 'Carrier status', clickToChange: 'Click status to change',
+    countryRules: 'Country rules', clickToEdit: 'Click any rule to edit',
+    notes: 'Notes', clickNotesToEdit: 'Click to edit',
+    addRule: 'Add rule', notesPlaceholder: 'Add notes for this destination…',
+    selectDest: 'Select a destination',
+    regions: { 'North America': 'North America', 'Europe': 'Europe', 'Latin America': 'Latin America', 'Asia Pacific': 'Asia Pacific', 'Suspended': 'Suspended' },
+    sc: {
+      ok:   { label: 'OK',        pillLabel: 'Operational' },
+      warn: { label: 'Caution',   pillLabel: 'Check before booking' },
+      no:   { label: 'Suspended', pillLabel: 'Do not ship' },
+      q:    { label: 'Monitor',   pillLabel: 'Monitor' },
+    },
+    options: { ok: 'OK', warn: 'Caution', no: 'Suspended', q: 'Monitor' },
+  },
+  ja: {
+    title: '日本発送オペレーション', subtitle: '配送業者・配送先ガイド',
+    updated: '2026年5月27日 更新',
+    carrierStatus: '配送業者ステータス', clickToChange: 'クリックして変更',
+    countryRules: '国別ルール', clickToEdit: 'クリックして編集',
+    notes: 'メモ', clickNotesToEdit: 'クリックして編集',
+    addRule: 'ルールを追加', notesPlaceholder: 'このあて先のメモを追加…',
+    selectDest: '配送先を選択',
+    regions: { 'North America': '北米', 'Europe': 'ヨーロッパ', 'Latin America': 'ラテンアメリカ', 'Asia Pacific': 'アジア太平洋', 'Suspended': '停止中' },
+    sc: {
+      ok:   { label: '正常',   pillLabel: '正常稼働' },
+      warn: { label: '要注意', pillLabel: '要確認' },
+      no:   { label: '停止',   pillLabel: '出荷不可' },
+      q:    { label: '監視中', pillLabel: '監視中' },
+    },
+    options: { ok: '正常', warn: '要注意', no: '停止', q: '監視中' },
+  },
+  fr: {
+    title: 'Ops expédition Japon', subtitle: 'Guide transporteur & destination',
+    updated: 'Mis à jour le 27 mai 2026',
+    carrierStatus: 'Statut transporteur', clickToChange: 'Cliquer pour modifier',
+    countryRules: 'Règles par pays', clickToEdit: 'Cliquer pour modifier',
+    notes: 'Notes', clickNotesToEdit: 'Cliquer pour modifier',
+    addRule: 'Ajouter une règle', notesPlaceholder: 'Ajouter des notes pour cette destination…',
+    selectDest: 'Sélectionner une destination',
+    regions: { 'North America': 'Amérique du Nord', 'Europe': 'Europe', 'Latin America': 'Amérique latine', 'Asia Pacific': 'Asie-Pacifique', 'Suspended': 'Suspendu' },
+    sc: {
+      ok:   { label: 'OK',        pillLabel: 'Opérationnel' },
+      warn: { label: 'Attention', pillLabel: 'À vérifier avant' },
+      no:   { label: 'Suspendu',  pillLabel: 'Ne pas expédier' },
+      q:    { label: 'Surveiller', pillLabel: 'Surveiller' },
+    },
+    options: { ok: 'OK', warn: 'Attention', no: 'Suspendu', q: 'Surveiller' },
+  },
+};
+
+// ── Static SC (CSS classes only — labels come from translations) ──
+
+const SC_CSS: Record<CarrierStatus, { wrapCls: string; badgeCls: string; pillCls: string }> = {
+  ok:   { wrapCls: 's-ok',   badgeCls: 'badge-ok',   pillCls: 'op-ok' },
+  warn: { wrapCls: 's-warn', badgeCls: 'badge-warn', pillCls: 'op-warn' },
+  no:   { wrapCls: 's-no',   badgeCls: 'badge-no',   pillCls: 'op-no' },
+  q:    { wrapCls: 's-q',    badgeCls: 'badge-q',    pillCls: 'op-warn' },
 };
 
 const REGIONS: Array<{ label: string; ids: string[] }> = [
@@ -31,11 +101,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: [
-      'FedEx USA: DDP required — never ship DAP',
-      'Declare full value — undervalue is auto-flagged',
-      'Japan Post: confirm acceptance per item type before booking',
-    ],
+    rules: ['FedEx USA: DDP required — never ship DAP', 'Declare full value — undervalue is auto-flagged', 'Japan Post: confirm acceptance per item type before booking'],
     notes: 'Japan Post availability to the US is inconsistent. Default to UPS or DHL unless JP is confirmed.',
   },
   canada: {
@@ -46,10 +112,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'Declare full value on all shipments',
-      'Goods over CAD $20 subject to duties and taxes',
-    ],
+    rules: ['Declare full value on all shipments', 'Goods over CAD $20 subject to duties and taxes'],
     notes: '',
   },
   mexico: {
@@ -60,12 +123,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational — RFC or CURP required.' },
       { name: 'DHL',        s: 'ok', note: 'Operational — RFC or CURP required.' },
     ],
-    rules: [
-      'RFC required for business recipients (13 chars)',
-      'CURP required for individual recipients (18 chars)',
-      'Missing tax ID causes customs hold — collect at checkout',
-      'All four carriers require tax ID — no exceptions',
-    ],
+    rules: ['RFC required for business recipients (13 chars)', 'CURP required for individual recipients (18 chars)', 'Missing tax ID causes customs hold — collect at checkout', 'All four carriers require tax ID — no exceptions'],
     notes: 'Mexico is a high-volume destination. Collect RFC or CURP at checkout to avoid delays.',
   },
   uk: {
@@ -76,11 +134,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Full value declaration required.' },
     ],
-    rules: [
-      'Post-Brexit: all shipments require HS commodity codes',
-      'DHL: full declared value mandatory',
-      'IOSS number required for B2C orders under £135',
-    ],
+    rules: ['Post-Brexit: all shipments require HS commodity codes', 'DHL: full declared value mandatory', 'IOSS number required for B2C orders under £135'],
     notes: '',
   },
   germany: {
@@ -91,11 +145,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'Full declared value required on all carriers',
-      'IOSS number required for B2C orders under €150',
-      'Electronics: WEEE registration may be required',
-    ],
+    rules: ['Full declared value required on all carriers', 'IOSS number required for B2C orders under €150', 'Electronics: WEEE registration may be required'],
     notes: '',
   },
   france: {
@@ -106,10 +156,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'IOSS number required for B2C orders under €150',
-      'Full declared value on all shipments',
-    ],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
     notes: '',
   },
   spain: {
@@ -120,10 +167,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: [
-      'Verify Japan Post acceptance before booking',
-      'IOSS number required for B2C orders under €150',
-    ],
+    rules: ['Verify Japan Post acceptance before booking', 'IOSS number required for B2C orders under €150'],
     notes: 'Spain has periodically appeared on JP suspension lists. Always confirm JP on day of booking.',
   },
   italy: {
@@ -134,11 +178,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: [
-      'Verify Japan Post acceptance before booking',
-      'Codice Fiscale may be required for some shipments',
-      'IOSS number required for B2C orders under €150',
-    ],
+    rules: ['Verify Japan Post acceptance before booking', 'Codice Fiscale may be required for some shipments', 'IOSS number required for B2C orders under €150'],
     notes: 'Italy has periodically appeared on JP suspension lists. Always confirm JP on day of booking.',
   },
   benelux: {
@@ -149,10 +189,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'IOSS number required for B2C orders under €150',
-      'Full declared value on all shipments',
-    ],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
     notes: '',
   },
   sweden: {
@@ -163,10 +200,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'IOSS number required for B2C orders under €150',
-      'Declare full value — undervalue flagged at customs',
-    ],
+    rules: ['IOSS number required for B2C orders under €150', 'Declare full value — undervalue flagged at customs'],
     notes: '',
   },
   norway: {
@@ -177,11 +211,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'Norway is outside the EU — IOSS does not apply',
-      'All goods subject to Norwegian customs and VAT',
-      'Shipments over NOK 350 subject to import duties',
-    ],
+    rules: ['Norway is outside the EU — IOSS does not apply', 'All goods subject to Norwegian customs and VAT', 'Shipments over NOK 350 subject to import duties'],
     notes: 'Norway processes customs independently. Do not apply EU IOSS to Norwegian orders.',
   },
   denmark: {
@@ -192,10 +222,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'IOSS number required for B2C orders under €150',
-      'Full declared value on all shipments',
-    ],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
     notes: '',
   },
   finland: {
@@ -206,10 +233,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'IOSS number required for B2C orders under €150',
-      'Full declared value on all shipments',
-    ],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
     notes: '',
   },
   brazil: {
@@ -220,11 +244,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational — CPF or CNPJ required.' },
       { name: 'DHL',        s: 'ok', note: 'Operational — CPF or CNPJ required.' },
     ],
-    rules: [
-      'CPF required for individual recipients (11 digits)',
-      'CNPJ required for company recipients (14 digits)',
-      'Missing tax ID causes customs hold or return — collect at order time',
-    ],
+    rules: ['CPF required for individual recipients (11 digits)', 'CNPJ required for company recipients (14 digits)', 'Missing tax ID causes customs hold or return — collect at order time'],
     notes: 'Validate CPF/CNPJ format before submitting. Invalid numbers cause automatic rejection.',
   },
   latam: {
@@ -235,10 +255,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'Check Japan Post advisory per country before booking',
-      'Some countries may require importer tax ID — confirm with carrier',
-    ],
+    rules: ['Check Japan Post advisory per country before booking', 'Some countries may require importer tax ID — confirm with carrier'],
     notes: 'Brazil and Mexico are listed separately due to mandatory tax ID requirements.',
   },
   australia: {
@@ -249,10 +266,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'Goods over AUD 1,000 subject to import duties and GST',
-      'Strict biosecurity — never ship food, plants, or animal products',
-    ],
+    rules: ['Goods over AUD 1,000 subject to import duties and GST', 'Strict biosecurity — never ship food, plants, or animal products'],
     notes: '',
   },
   china: {
@@ -263,11 +277,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: [
-      'Recipient ID number required for customs clearance',
-      'Restricted categories: cosmetics, supplements, electronics — verify before shipping',
-      'JP delays common — use courier for time-sensitive orders',
-    ],
+    rules: ['Recipient ID number required for customs clearance', 'Restricted categories: cosmetics, supplements, electronics — verify before shipping', 'JP delays common — use courier for time-sensitive orders'],
     notes: 'China customs regulations change frequently. Confirm current requirements per shipment category.',
   },
   korea: {
@@ -278,10 +288,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'Personal customs clearance ID (PCCC) required for B2C shipments',
-      'Goods over KRW 150,000 subject to duties',
-    ],
+    rules: ['Personal customs clearance ID (PCCC) required for B2C shipments', 'Goods over KRW 150,000 subject to duties'],
     notes: '',
   },
   taiwan: {
@@ -292,10 +299,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'Declare full value — customs checks declared vs. market value',
-      'Goods over TWD 2,000 may be subject to duties',
-    ],
+    rules: ['Declare full value — customs checks declared vs. market value', 'Goods over TWD 2,000 may be subject to duties'],
     notes: '',
   },
   singapore: {
@@ -306,10 +310,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: [
-      'All imports over SGD 400 subject to GST',
-      'Chewing gum and certain goods prohibited — check restricted items list',
-    ],
+    rules: ['All imports over SGD 400 subject to GST', 'Chewing gum and certain goods prohibited — check restricted items list'],
     notes: '',
   },
   apac: {
@@ -320,10 +321,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'q',    note: 'Monitoring — verify before booking.' },
       { name: 'DHL',        s: 'q',    note: 'Monitoring — verify before booking.' },
     ],
-    rules: [
-      'Always verify JP acceptance per country before booking',
-      'Carrier service levels vary significantly across this region',
-    ],
+    rules: ['Always verify JP acceptance per country before booking', 'Carrier service levels vary significantly across this region'],
     notes: 'Status changes frequently. Check carrier advisory pages before booking.',
   },
   mideast: {
@@ -334,10 +332,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'no', note: 'Service impacts — do not book.' },
       { name: 'DHL',        s: 'no', note: 'Status page unavailable — do not book.' },
     ],
-    rules: [
-      'Do not accept new orders destined for this region',
-      'If already in transit — contact carrier ops immediately',
-    ],
+    rules: ['Do not accept new orders destined for this region', 'If already in transit — contact carrier ops immediately'],
     notes: 'All four carriers suspended or significantly impacted. No exceptions without ops manager approval.',
   },
   russia: {
@@ -348,15 +343,12 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'no', note: 'Service suspended.' },
       { name: 'DHL',        s: 'no', note: 'Service suspended.' },
     ],
-    rules: [
-      'All carriers suspended — no exceptions',
-      'Refund any orders received from these destinations',
-    ],
+    rules: ['All carriers suspended — no exceptions', 'Refund any orders received from these destinations'],
     notes: 'FedEx suspension is indefinite. Do not accept or hold orders for Russia or Belarus.',
   },
 };
 
-// ── Flag image (uses flagcdn.com to avoid Windows emoji rendering issues) ──
+// ── Flag image ────────────────────────────────────────────────────
 
 function FlagImg({ code, w = 20 }: { code: string | null; w?: number }) {
   if (!code) {
@@ -374,15 +366,14 @@ function FlagImg({ code, w = 20 }: { code: string | null; w?: number }) {
     <img
       src={`https://flagcdn.com/w${w}/${code}.png`}
       srcSet={`https://flagcdn.com/w${w * 2}/${code}.png 2x`}
-      width={w}
-      height={Math.round(w * 0.75)}
+      width={w} height={Math.round(w * 0.75)}
       alt={code.toUpperCase()}
       style={{ display: 'block', borderRadius: 2 }}
     />
   );
 }
 
-// ── Carrier SVG logos ──
+// ── Carrier SVG logos ─────────────────────────────────────────────
 
 const CARRIER_LOGOS: Record<string, React.ReactNode> = {
   'Japan Post': (
@@ -416,7 +407,7 @@ const CARRIER_LOGOS: Record<string, React.ReactNode> = {
   ),
 };
 
-// ── Helpers ──
+// ── Helpers ───────────────────────────────────────────────────────
 
 function overallStatus(carriers: Carrier[]): CarrierStatus {
   const ss = carriers.map(c => c.s);
@@ -434,6 +425,7 @@ function autoResize(el: HTMLTextAreaElement) {
 
 interface DetailProps {
   dest: DestData;
+  t: Translation;
   onCarrierStatus: (ci: number, val: CarrierStatus) => void;
   onCarrierNote:   (ci: number, val: string) => void;
   onRuleChange:    (ri: number, val: string) => void;
@@ -442,7 +434,7 @@ interface DetailProps {
   onNotesChange:   (val: string) => void;
 }
 
-function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddRule, onDeleteRule, onNotesChange }: DetailProps) {
+function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onAddRule, onDeleteRule, onNotesChange }: DetailProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -450,7 +442,6 @@ function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddR
   }, []);
 
   const ov = overallStatus(dest.carriers);
-  const sc = SC[ov];
 
   return (
     <div className="dp" ref={containerRef}>
@@ -462,13 +453,13 @@ function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddR
           <div className="dest-name">{dest.name}</div>
           <div className="dest-region-sub">{dest.region}</div>
         </div>
-        <span className={`overall-pill ${sc.pillCls}`}>{sc.pillLabel}</span>
+        <span className={`overall-pill ${SC_CSS[ov].pillCls}`}>{t.sc[ov].pillLabel}</span>
       </div>
 
       <div className="sec-block">
         <div className="sec-head">
-          <span>Carrier status</span>
-          <span className="edit-hint">Click status to change</span>
+          <span>{t.carrierStatus}</span>
+          <span className="edit-hint">{t.clickToChange}</span>
         </div>
         <table className="carrier-table">
           <tbody>
@@ -488,19 +479,19 @@ function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddR
                   />
                 </td>
                 <td className="ct-status">
-                  <div className={`status-select-wrap ${SC[c.s].wrapCls}`}>
+                  <div className={`status-select-wrap ${SC_CSS[c.s].wrapCls}`}>
                     <div className="status-dot" />
                     <select
                       className="status-select"
                       value={c.s}
                       onChange={e => onCarrierStatus(ci, e.target.value as CarrierStatus)}
                     >
-                      <option value="ok">OK</option>
-                      <option value="warn">Caution</option>
-                      <option value="no">Suspended</option>
-                      <option value="q">Monitor</option>
+                      <option value="ok">{t.options.ok}</option>
+                      <option value="warn">{t.options.warn}</option>
+                      <option value="no">{t.options.no}</option>
+                      <option value="q">{t.options.q}</option>
                     </select>
-                    <i className="ti ti-chevron-down chevron-icon" aria-hidden="true" />
+                    <span className="chevron-icon" aria-hidden="true">▾</span>
                   </div>
                 </td>
               </tr>
@@ -513,28 +504,26 @@ function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddR
 
       <div className="sec-block">
         <div className="sec-head">
-          <span>Country rules</span>
-          <span className="edit-hint">Click any rule to edit</span>
+          <span>{t.countryRules}</span>
+          <span className="edit-hint">{t.clickToEdit}</span>
         </div>
         <div className="rules-list">
           {dest.rules.map((r, ri) => (
             <div key={ri} className="rule-item">
-              <i className="ti ti-point-filled rule-icon" aria-hidden="true" />
+              <span className="rule-icon" aria-hidden="true">•</span>
               <textarea
                 className="rule-text"
                 rows={1}
                 value={r}
                 onChange={e => { onRuleChange(ri, e.target.value); autoResize(e.target); }}
               />
-              <button className="rule-del" onClick={() => onDeleteRule(ri)} aria-label="Delete rule">
-                <i className="ti ti-x" />
-              </button>
+              <button className="rule-del" onClick={() => onDeleteRule(ri)} aria-label="Delete rule">✕</button>
             </div>
           ))}
         </div>
         <button className="add-rule-btn" onClick={onAddRule}>
-          <i className="ti ti-plus" style={{ fontSize: 12 }} aria-hidden="true" />
-          Add rule
+          <span aria-hidden="true">+</span>
+          {t.addRule}
         </button>
       </div>
 
@@ -542,12 +531,12 @@ function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddR
 
       <div className="sec-block">
         <div className="sec-head">
-          <span>Notes</span>
-          <span className="edit-hint">Click to edit</span>
+          <span>{t.notes}</span>
+          <span className="edit-hint">{t.clickNotesToEdit}</span>
         </div>
         <textarea
           className="notes-area"
-          placeholder="Add notes for this destination…"
+          placeholder={t.notesPlaceholder}
           value={dest.notes}
           onChange={e => { onNotesChange(e.target.value); autoResize(e.target); }}
         />
@@ -561,6 +550,9 @@ function DestDetail({ dest, onCarrierStatus, onCarrierNote, onRuleChange, onAddR
 export default function Dashboard() {
   const [data, setData] = useState<Record<string, DestData>>(INITIAL_DATA);
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const [lang, setLang] = useState<Lang>('en');
+
+  const t = TRANSLATIONS[lang];
 
   function patch(id: string, fn: (d: DestData) => DestData) {
     setData(prev => ({ ...prev, [id]: fn(prev[id]) }));
@@ -600,10 +592,23 @@ export default function Dashboard() {
 
       <div className="hdr">
         <div>
-          <div className="hdr-title">Japan shipping ops</div>
-          <div className="hdr-sub">Carrier &amp; destination guide</div>
+          <div className="hdr-title">{t.title}</div>
+          <div className="hdr-sub">{t.subtitle}</div>
         </div>
-        <div className="updated">Updated May 27, 2026</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="updated">{t.updated}</div>
+          <div className="lang-toggle">
+            {(['en', 'ja', 'fr'] as Lang[]).map(l => (
+              <button
+                key={l}
+                className={`lang-btn${lang === l ? ' active' : ''}`}
+                onClick={() => setLang(l)}
+              >
+                {l === 'en' ? 'EN' : l === 'ja' ? '日本語' : 'FR'}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="body">
@@ -611,22 +616,19 @@ export default function Dashboard() {
           <div className="dest-list">
             {REGIONS.map(region => (
               <div key={region.label}>
-                <div className="region-label">{region.label}</div>
+                <div className="region-label">{t.regions[region.label] ?? region.label}</div>
                 {region.ids.map(id => {
                   const d = data[id];
                   const ov = overallStatus(d.carriers);
-                  const sc = SC[ov];
                   return (
                     <button
                       key={id}
                       className={`dest-btn${currentId === id ? ' active' : ''}`}
                       onClick={() => setCurrentId(id)}
                     >
-                      <span className="dflag">
-                        <FlagImg code={d.flagCode} w={20} />
-                      </span>
+                      <span className="dflag"><FlagImg code={d.flagCode} w={20} /></span>
                       <span className="dname">{d.name}</span>
-                      <span className={`dbadge ${sc.badgeCls}`}>{sc.label}</span>
+                      <span className={`dbadge ${SC_CSS[ov].badgeCls}`}>{t.sc[ov].label}</span>
                     </button>
                   );
                 })}
@@ -640,6 +642,7 @@ export default function Dashboard() {
             <DestDetail
               key={currentId}
               dest={data[currentId]}
+              t={t}
               onCarrierStatus={(ci, val) => handleCarrierStatus(currentId, ci, val)}
               onCarrierNote={(ci, val) => handleCarrierNote(currentId, ci, val)}
               onRuleChange={(ri, val) => handleRuleChange(currentId, ri, val)}
@@ -649,8 +652,7 @@ export default function Dashboard() {
             />
           ) : (
             <div className="placeholder">
-              <i className="ti ti-map-2" aria-hidden="true" />
-              <p>Select a destination</p>
+              <p>{t.selectDest}</p>
             </div>
           )}
         </div>
