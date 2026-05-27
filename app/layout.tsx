@@ -17,13 +17,19 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Japan Shipping Status',
-  description: 'Real-time shipping status for Japan Post, FedEx, UPS, and DHL routes',
+  title: 'Japan Shipping Ops',
+  description: 'Carrier & destination guide for Japan shipping operations',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/tabler-icons.min.css"
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

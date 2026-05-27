@@ -1,0 +1,381 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.dash { font-family: var(--font-sans); display: flex; flex-direction: column; height: 760px; }
+.hdr { padding: 0.875rem 1.25rem; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.hdr-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.hdr-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 1px; }
+.updated { font-size: 11px; color: var(--color-text-secondary); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 20px; padding: 3px 9px; }
+.notices { display: flex; flex-direction: column; gap: 5px; padding: 0.75rem 1.25rem; border-bottom: 0.5px solid var(--color-border-tertiary); flex-shrink: 0; }
+.notice { display: flex; align-items: flex-start; gap: 7px; padding: 7px 10px; border-radius: var(--border-radius-md); font-size: 12px; line-height: 1.4; }
+.n-warn { background: var(--color-background-warning); color: var(--color-text-warning); }
+.n-danger { background: var(--color-background-danger); color: var(--color-text-danger); }
+.body { display: flex; flex: 1; min-height: 0; }
+.sidebar { width: 200px; flex-shrink: 0; border-right: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; min-height: 0; }
+.dest-list { overflow-y: auto; flex: 1; }
+.dest-list::-webkit-scrollbar { width: 3px; }
+.dest-list::-webkit-scrollbar-thumb { background: var(--color-border-secondary); border-radius: 2px; }
+.region-label { font-size: 10px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--color-text-tertiary); padding: 0.625rem 1rem 0.25rem; }
+.dest-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 1rem; background: none; border: none; font-family: var(--font-sans); font-size: 13px; color: var(--color-text-primary); cursor: pointer; text-align: left; }
+.dest-btn:hover { background: var(--color-background-secondary); }
+.dest-btn.active { background: var(--color-background-info); color: var(--color-text-info); font-weight: 500; }
+.dflag { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.dname { flex: 1; min-width: 0; }
+.dbadge { font-size: 9.5px; font-weight: 500; padding: 2px 5px; border-radius: 3px; flex-shrink: 0; }
+.badge-ok   { background: var(--color-background-success); color: var(--color-text-success); }
+.badge-warn { background: var(--color-background-warning); color: var(--color-text-warning); }
+.badge-no   { background: var(--color-background-danger);  color: var(--color-text-danger); }
+.badge-q    { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 0.5px solid var(--color-border-tertiary); }
+.detail { flex: 1; min-width: 0; overflow-y: auto; }
+.detail::-webkit-scrollbar { width: 3px; }
+.detail::-webkit-scrollbar-thumb { background: var(--color-border-secondary); border-radius: 2px; }
+.placeholder { padding: 3rem 1.5rem; text-align: center; color: var(--color-text-tertiary); }
+.placeholder i { font-size: 28px; display: block; margin-bottom: 8px; }
+.placeholder p { font-size: 13px; }
+.dp { padding: 1.125rem 1.25rem; }
+.dest-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 1.125rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.dest-flag-lg { font-size: 24px; flex-shrink: 0; }
+.dest-name { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.dest-region-sub { font-size: 11.5px; color: var(--color-text-secondary); margin-top: 1px; }
+.overall-pill { margin-left: auto; font-size: 11.5px; font-weight: 500; padding: 4px 11px; border-radius: 20px; flex-shrink: 0; }
+.op-ok   { background: var(--color-background-success); color: var(--color-text-success); }
+.op-warn { background: var(--color-background-warning); color: var(--color-text-warning); }
+.op-no   { background: var(--color-background-danger);  color: var(--color-text-danger); }
+.sec-head { font-size: 10px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between; }
+.sec-block { margin-bottom: 1rem; }
+.edit-hint { font-size: 10.5px; color: var(--color-text-tertiary); font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; }
+
+/* Carrier table — matches the screenshot style */
+.carrier-table { width: 100%; border-collapse: collapse; }
+.carrier-table tr { border-bottom: 0.5px solid var(--color-border-tertiary); }
+.carrier-table tr:last-child { border-bottom: none; }
+.carrier-table td { padding: 9px 0; vertical-align: middle; }
+.ct-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); width: 80px; padding-right: 12px !important; }
+.ct-note { font-size: 13px; color: var(--color-text-secondary); }
+.ct-status { text-align: right; width: 130px; padding-left: 8px !important; }
+
+/* Status dropdown — styled to look like the pill in the screenshot */
+.status-select-wrap { display: inline-flex; align-items: center; gap: 5px; border-radius: 20px; padding: 3px 4px 3px 9px; border: 0.5px solid; position: relative; }
+.status-select-wrap.s-ok   { background: var(--color-background-success); border-color: var(--color-border-success); }
+.status-select-wrap.s-warn { background: var(--color-background-warning); border-color: var(--color-border-warning); }
+.status-select-wrap.s-no   { background: var(--color-background-danger);  border-color: var(--color-border-danger); }
+.status-select-wrap.s-q    { background: var(--color-background-secondary); border-color: var(--color-border-tertiary); }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.s-ok   .status-dot { background: var(--color-text-success); }
+.s-warn .status-dot { background: var(--color-text-warning); }
+.s-no   .status-dot { background: var(--color-text-danger); }
+.s-q    .status-dot { background: var(--color-text-secondary); }
+.status-select { font-family: var(--font-sans); font-size: 12px; font-weight: 500; border: none; background: transparent; outline: none; cursor: pointer; padding: 0; padding-right: 2px; appearance: none; -webkit-appearance: none; }
+.s-ok   .status-select { color: var(--color-text-success); }
+.s-warn .status-select { color: var(--color-text-warning); }
+.s-no   .status-select { color: var(--color-text-danger); }
+.s-q    .status-select { color: var(--color-text-secondary); }
+.chevron-icon { font-size: 11px; flex-shrink: 0; }
+.s-ok   .chevron-icon { color: var(--color-text-success); }
+.s-warn .chevron-icon { color: var(--color-text-warning); }
+.s-no   .chevron-icon { color: var(--color-text-danger); }
+.s-q    .chevron-icon { color: var(--color-text-secondary); }
+
+.rules-list { display: flex; flex-direction: column; gap: 4px; }
+.rule-item { display: flex; align-items: flex-start; gap: 7px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); font-size: 12px; color: var(--color-text-primary); line-height: 1.45; overflow: hidden; }
+.rule-icon { font-size: 11px; color: var(--color-text-secondary); flex-shrink: 0; margin-top: 9px; margin-left: 10px; }
+.rule-text { flex: 1; padding: 7px 4px 7px 0; outline: none; background: transparent; border: none; font-family: var(--font-sans); font-size: 12px; color: var(--color-text-primary); line-height: 1.45; min-width: 0; cursor: text; resize: none; overflow: hidden; }
+.rule-text:focus { background: var(--color-background-primary); border-radius: 3px; }
+.rule-del { background: none; border: none; color: var(--color-text-tertiary); cursor: pointer; font-size: 14px; padding: 7px 8px; flex-shrink: 0; display: flex; align-items: flex-start; }
+.rule-del:hover { color: var(--color-text-danger); }
+.add-rule-btn { display: flex; align-items: center; gap: 5px; background: none; border: 0.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); width: 100%; padding: 6px 10px; font-family: var(--font-sans); font-size: 12px; color: var(--color-text-secondary); cursor: pointer; margin-top: 4px; }
+.add-rule-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+.notes-area { width: 100%; background: var(--color-background-secondary); border: none; border-radius: var(--border-radius-md); padding: 9px 11px; font-family: var(--font-sans); font-size: 12px; color: var(--color-text-primary); line-height: 1.55; min-height: 60px; resize: vertical; outline: none; }
+.notes-area:focus { background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); }
+.notes-area::placeholder { color: var(--color-text-tertiary); font-style: italic; }
+.sep { height: 0.5px; background: var(--color-border-tertiary); margin: 0.875rem 0; }
+</style>
+
+<div class="dash">
+  <h2 class="sr-only">Japan shipping ops — editable destination carrier guide</h2>
+  <div class="hdr">
+    <div><div class="hdr-title">Japan shipping ops</div><div class="hdr-sub">Carrier & destination guide</div></div>
+    <div class="updated">Updated May 27, 2026</div>
+  </div>
+  <div class="notices">
+    <div class="notice n-warn"><i class="ti ti-alert-triangle" style="font-size:13px;flex-shrink:0;margin-top:1px;" aria-hidden="true"></i>Insurance required on all orders ¥50,000+ — always use real declared value</div>
+    <div class="notice n-danger"><i class="ti ti-ban" style="font-size:13px;flex-shrink:0;margin-top:1px;" aria-hidden="true"></i>Never use as goods description: cosmetics · medicine · food · drinks · toys</div>
+  </div>
+  <div class="body">
+    <div class="sidebar">
+      <div class="dest-list" id="destList"></div>
+    </div>
+    <div class="detail" id="detail">
+      <div class="placeholder"><i class="ti ti-map-2" aria-hidden="true"></i><p>Select a destination</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGIONS = [
+  { label:'North America', ids:['usa','canada','mexico'] },
+  { label:'Europe',        ids:['uk','germany','france','spain','italy','benelux','sweden','norway','denmark','finland'] },
+  { label:'Latin America', ids:['brazil','latam'] },
+  { label:'Asia Pacific',  ids:['australia','china','korea','taiwan','singapore','apac'] },
+  { label:'Suspended',     ids:['mideast','russia'] }
+];
+
+const D = {
+  usa:       { flag:'🇺🇸', name:'USA',                   region:'North America',
+    carriers:[{name:'Japan Post',s:'warn',note:'Limited resumption April 2026 — verify per item type.'},{name:'FedEx',s:'warn',note:'DDP only — confirm terms before booking.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['FedEx USA: DDP required — never ship DAP','Declare full value — undervalue is auto-flagged','Japan Post: confirm acceptance per item type before booking'],
+    notes:'Japan Post availability to the US is inconsistent. Default to UPS or DHL unless JP is confirmed.' },
+  canada:    { flag:'🇨🇦', name:'Canada',                 region:'North America',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Declare full value on all shipments','Goods over CAD $20 subject to duties and taxes'],
+    notes:'' },
+  mexico:    { flag:'🇲🇽', name:'Mexico',                 region:'North America',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational — RFC or CURP required.'},{name:'FedEx',s:'ok',note:'Operational — RFC or CURP required.'},{name:'UPS',s:'ok',note:'Operational — RFC or CURP required.'},{name:'DHL',s:'ok',note:'Operational — RFC or CURP required.'}],
+    rules:['RFC required for business recipients (13 chars)','CURP required for individual recipients (18 chars)','Missing tax ID causes customs hold — collect at checkout','All four carriers require tax ID — no exceptions'],
+    notes:'Mexico is a high-volume destination. Collect RFC or CURP at checkout to avoid delays.' },
+  uk:        { flag:'🇬🇧', name:'UK',                     region:'Europe',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Full value declaration required.'}],
+    rules:['Post-Brexit: all shipments require HS commodity codes','DHL: full declared value mandatory','IOSS number required for B2C orders under £135'],
+    notes:'' },
+  germany:   { flag:'🇩🇪', name:'Germany',                region:'Europe',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Full declared value required on all carriers','IOSS number required for B2C orders under €150','Electronics: WEEE registration may be required'],
+    notes:'' },
+  france:    { flag:'🇫🇷', name:'France',                 region:'Europe',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['IOSS number required for B2C orders under €150','Full declared value on all shipments'],
+    notes:'' },
+  spain:     { flag:'🇪🇸', name:'Spain',                  region:'Europe',
+    carriers:[{name:'Japan Post',s:'warn',note:'Check JP advisory — suspensions have applied.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Verify Japan Post acceptance before booking','IOSS number required for B2C orders under €150'],
+    notes:'Spain has periodically appeared on JP suspension lists. Always confirm JP on day of booking.' },
+  italy:     { flag:'🇮🇹', name:'Italy',                  region:'Europe',
+    carriers:[{name:'Japan Post',s:'warn',note:'Check JP advisory — suspensions have applied.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Verify Japan Post acceptance before booking','Codice Fiscale may be required for some shipments','IOSS number required for B2C orders under €150'],
+    notes:'Italy has periodically appeared on JP suspension lists. Always confirm JP on day of booking.' },
+  benelux:   { flag:'🇧🇪', name:'Belgium / Netherlands',  region:'Europe',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['IOSS number required for B2C orders under €150','Full declared value on all shipments'],
+    notes:'' },
+  sweden:    { flag:'🇸🇪', name:'Sweden',                 region:'Europe',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['IOSS number required for B2C orders under €150','Declare full value — undervalue flagged at customs'],
+    notes:'' },
+  norway:    { flag:'🇳🇴', name:'Norway',                 region:'Europe — non-EU',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Norway is outside the EU — IOSS does not apply','All goods subject to Norwegian customs and VAT','Shipments over NOK 350 subject to import duties'],
+    notes:'Norway processes customs independently. Do not apply EU IOSS to Norwegian orders.' },
+  denmark:   { flag:'🇩🇰', name:'Denmark',                region:'Europe',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['IOSS number required for B2C orders under €150','Full declared value on all shipments'],
+    notes:'' },
+  finland:   { flag:'🇫🇮', name:'Finland',                region:'Europe',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['IOSS number required for B2C orders under €150','Full declared value on all shipments'],
+    notes:'' },
+  brazil:    { flag:'🇧🇷', name:'Brazil',                 region:'Latin America',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational — CPF or CNPJ required.'},{name:'FedEx',s:'ok',note:'Operational — CPF or CNPJ required.'},{name:'UPS',s:'ok',note:'Operational — CPF or CNPJ required.'},{name:'DHL',s:'ok',note:'Operational — CPF or CNPJ required.'}],
+    rules:['CPF required for individual recipients (11 digits)','CNPJ required for company recipients (14 digits)','Missing tax ID causes customs hold or return — collect at order time'],
+    notes:'Validate CPF/CNPJ format before submitting. Invalid numbers cause automatic rejection.' },
+  latam:     { flag:'🌎', name:'Latin America (other)',    region:'Latin America — excl. Brazil & Mexico',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational — verify per country.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Check Japan Post advisory per country before booking','Some countries may require importer tax ID — confirm with carrier'],
+    notes:'Brazil and Mexico are listed separately due to mandatory tax ID requirements.' },
+  australia: { flag:'🇦🇺', name:'Australia',              region:'Asia Pacific',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Goods over AUD 1,000 subject to import duties and GST','Strict biosecurity — never ship food, plants, or animal products'],
+    notes:'' },
+  china:     { flag:'🇨🇳', name:'China',                  region:'Asia Pacific',
+    carriers:[{name:'Japan Post',s:'warn',note:'Check advisory — periodic delays and restrictions.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Recipient ID number required for customs clearance','Restricted categories: cosmetics, supplements, electronics — verify before shipping','JP delays common — use courier for time-sensitive orders'],
+    notes:'China customs regulations change frequently. Confirm current requirements per shipment category.' },
+  korea:     { flag:'🇰🇷', name:'South Korea',            region:'Asia Pacific',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Personal customs clearance ID (PCCC) required for B2C shipments','Goods over KRW 150,000 subject to duties'],
+    notes:'' },
+  taiwan:    { flag:'🇹🇼', name:'Taiwan',                 region:'Asia Pacific',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['Declare full value — customs checks declared vs. market value','Goods over TWD 2,000 may be subject to duties'],
+    notes:'' },
+  singapore: { flag:'🇸🇬', name:'Singapore',              region:'Asia Pacific',
+    carriers:[{name:'Japan Post',s:'ok',note:'Operational.'},{name:'FedEx',s:'ok',note:'Operational.'},{name:'UPS',s:'ok',note:'Operational.'},{name:'DHL',s:'ok',note:'Operational.'}],
+    rules:['All imports over SGD 400 subject to GST','Chewing gum and certain goods prohibited — check restricted items list'],
+    notes:'' },
+  apac:      { flag:'🌏', name:'Asia Pacific (other)',     region:'Asia Pacific — excl. listed',
+    carriers:[{name:'Japan Post',s:'warn',note:'Partial — check JP advisory per country.'},{name:'FedEx',s:'q',note:'Monitoring — verify before booking.'},{name:'UPS',s:'q',note:'Monitoring — verify before booking.'},{name:'DHL',s:'q',note:'Monitoring — verify before booking.'}],
+    rules:['Always verify JP acceptance per country before booking','Carrier service levels vary significantly across this region'],
+    notes:'Status changes frequently. Check carrier advisory pages before booking.' },
+  mideast:   { flag:'🌍', name:'Middle East',              region:'Middle East',
+    carriers:[{name:'Japan Post',s:'no',note:'Service suspended.'},{name:'FedEx',s:'no',note:'Suspended — actively adjusting to situation.'},{name:'UPS',s:'no',note:'Service impacts — do not book.'},{name:'DHL',s:'no',note:'Status page unavailable — do not book.'}],
+    rules:['Do not accept new orders destined for this region','If already in transit — contact carrier ops immediately'],
+    notes:'All four carriers suspended or significantly impacted. No exceptions without ops manager approval.' },
+  russia:    { flag:'🇷🇺', name:'Russia / Belarus',       region:'Eastern Europe',
+    carriers:[{name:'Japan Post',s:'no',note:'Service suspended.'},{name:'FedEx',s:'no',note:'Suspended indefinitely.'},{name:'UPS',s:'no',note:'Service suspended.'},{name:'DHL',s:'no',note:'Service suspended.'}],
+    rules:['All carriers suspended — no exceptions','Refund any orders received from these destinations'],
+    notes:'FedEx suspension is indefinite. Do not accept or hold orders for Russia or Belarus.' }
+};
+
+const SC = {
+  ok:   { wrapCls:'s-ok',   label:'OK',          badgeCls:'badge-ok',   pillCls:'op-ok',   pillLabel:'Operational' },
+  warn: { wrapCls:'s-warn', label:'Caution',      badgeCls:'badge-warn', pillCls:'op-warn', pillLabel:'Check before booking' },
+  no:   { wrapCls:'s-no',   label:'Suspended',    badgeCls:'badge-no',   pillCls:'op-no',   pillLabel:'Do not ship' },
+  q:    { wrapCls:'s-q',    label:'Monitor',      badgeCls:'badge-q',    pillCls:'op-warn', pillLabel:'Monitor' }
+};
+
+function overallStatus(id) {
+  const ss = D[id].carriers.map(c => c.s);
+  if (ss.some(s => s === 'no'))             return 'no';
+  if (ss.some(s => s === 'warn' || s === 'q')) return 'warn';
+  return 'ok';
+}
+
+let currentId = null;
+
+function buildSidebar() {
+  const list = document.getElementById('destList');
+  list.innerHTML = '';
+  REGIONS.forEach(r => {
+    const grp = document.createElement('div');
+    const lbl = document.createElement('div');
+    lbl.className = 'region-label';
+    lbl.textContent = r.label;
+    grp.appendChild(lbl);
+    r.ids.forEach(id => {
+      const d = D[id];
+      const sc = SC[overallStatus(id)];
+      const btn = document.createElement('button');
+      btn.className = 'dest-btn' + (currentId === id ? ' active' : '');
+      btn.id = 'btn-' + id;
+      btn.innerHTML = `<span class="dflag">${d.flag}</span><span class="dname">${d.name}</span><span class="dbadge ${sc.badgeCls}">${sc.label}</span>`;
+      btn.onclick = () => show(id);
+      grp.appendChild(btn);
+    });
+    list.appendChild(grp);
+  });
+}
+
+function onCarrierChange(id, ci, val) {
+  D[id].carriers[ci].s = val;
+  buildSidebar();
+  refreshHeading(id);
+}
+
+function onNoteChange(id, ci, val) {
+  D[id].carriers[ci].note = val;
+}
+
+function refreshHeading(id) {
+  const ov = overallStatus(id);
+  const sc = SC[ov];
+  const pill = document.getElementById('overall-pill');
+  if (pill) { pill.className = 'overall-pill ' + sc.pillCls; pill.textContent = sc.pillLabel; }
+}
+
+function addRule(id) {
+  D[id].rules.push('New rule — click to edit');
+  show(id);
+  const inputs = document.querySelectorAll('.rule-text');
+  const last = inputs[inputs.length - 1];
+  if (last) { last.focus(); last.select(); }
+}
+
+function deleteRule(id, ri) { D[id].rules.splice(ri, 1); show(id); }
+
+function show(id) {
+  currentId = id;
+  document.querySelectorAll('.dest-btn').forEach(b => b.classList.remove('active'));
+  const ab = document.getElementById('btn-' + id);
+  if (ab) ab.classList.add('active');
+
+  const d = D[id];
+  const ov = overallStatus(id);
+  const sc = SC[ov];
+
+  const carrierRows = d.carriers.map((c, ci) => {
+    const opts = [
+      {v:'ok',   l:'OK'},
+      {v:'warn', l:'Caution'},
+      {v:'no',   l:'Suspended'},
+      {v:'q',    l:'Monitor'}
+    ].map(o => `<option value="${o.v}"${c.s===o.v?' selected':''}>${o.l}</option>`).join('');
+
+    const wrap = SC[c.s].wrapCls;
+
+    return `<tr>
+      <td class="ct-name">${c.name}</td>
+      <td class="ct-note">
+        <textarea class="rule-text" rows="1" style="width:100%;padding:0;"
+          oninput="onNoteChange('${id}',${ci},this.value);autoResize(this)"
+          onblur="onNoteChange('${id}',${ci},this.value)"
+        >${c.note}</textarea>
+      </td>
+      <td class="ct-status">
+        <div class="status-select-wrap ${wrap}" id="wrap-${id}-${ci}">
+          <div class="status-dot"></div>
+          <select class="status-select" onchange="onCarrierChange('${id}',${ci},this.value);updateWrap('${id}',${ci},this.value)">
+            ${opts}
+          </select>
+          <i class="ti ti-chevron-down chevron-icon" aria-hidden="true"></i>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const rulesHtml = d.rules.map((r, ri) => `
+    <div class="rule-item">
+      <i class="ti ti-point-filled rule-icon" aria-hidden="true"></i>
+      <textarea class="rule-text" rows="1"
+        oninput="D['${id}'].rules[${ri}]=this.value;autoResize(this)"
+        onblur="D['${id}'].rules[${ri}]=this.value"
+      >${r}</textarea>
+      <button class="rule-del" onclick="deleteRule('${id}',${ri})" aria-label="Delete rule"><i class="ti ti-x"></i></button>
+    </div>`).join('');
+
+  document.getElementById('detail').innerHTML = `<div class="dp">
+    <div class="dest-heading">
+      <span class="dest-flag-lg">${d.flag}</span>
+      <div><div class="dest-name">${d.name}</div><div class="dest-region-sub">${d.region}</div></div>
+      <span class="overall-pill ${sc.pillCls}" id="overall-pill">${sc.pillLabel}</span>
+    </div>
+
+    <div class="sec-block">
+      <div class="sec-head"><span>Carrier status</span><span class="edit-hint">Click status to change</span></div>
+      <table class="carrier-table">${carrierRows}</table>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="sec-block">
+      <div class="sec-head"><span>Country rules</span><span class="edit-hint">Click any rule to edit</span></div>
+      <div class="rules-list">${rulesHtml}</div>
+      <button class="add-rule-btn" onclick="addRule('${id}')"><i class="ti ti-plus" style="font-size:12px;" aria-hidden="true"></i> Add rule</button>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="sec-block">
+      <div class="sec-head"><span>Notes</span><span class="edit-hint">Click to edit</span></div>
+      <textarea class="notes-area" placeholder="Add notes for this destination…"
+        oninput="D['${id}'].notes=this.value"
+        onblur="D['${id}'].notes=this.value"
+      >${d.notes||''}</textarea>
+    </div>
+  </div>`;
+
+  document.getElementById('detail').scrollTop = 0;
+  document.querySelectorAll('.rule-text').forEach(autoResize);
+  document.querySelectorAll('.notes-area').forEach(autoResize);
+}
+
+function updateWrap(id, ci, val) {
+  const wrap = document.getElementById(`wrap-${id}-${ci}`);
+  if (wrap) { wrap.className = 'status-select-wrap ' + SC[val].wrapCls; }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+buildSidebar();
+</script>
