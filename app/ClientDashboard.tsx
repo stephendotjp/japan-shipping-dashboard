@@ -17,6 +17,7 @@ interface Translation {
   notes: string; clickNotesToEdit: string;
   addRule: string; notesPlaceholder: string; selectDest: string;
   back: string;
+  search: string; filterAll: string; filterIssues: string; noResults: string;
   regions: Record<string, string>;
   sc: Record<CarrierStatus, { label: string; pillLabel: string }>;
   options: Record<CarrierStatus, string>;
@@ -31,6 +32,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     notes: 'Notes', clickNotesToEdit: 'Click to edit',
     addRule: 'Add rule', notesPlaceholder: 'Add notes for this destination…',
     selectDest: 'Select a destination', back: '← Back',
+    search: 'Search destinations…', filterAll: 'All', filterIssues: 'Issues only', noResults: 'No destinations match',
     regions: { 'North America': 'North America', 'Europe': 'Europe', 'Latin America': 'Latin America', 'Asia Pacific': 'Asia Pacific', 'Middle East': 'Middle East', 'Suspended': 'Suspended' },
     sc: {
       ok:   { label: 'OK',        pillLabel: 'Operational' },
@@ -48,6 +50,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     notes: 'メモ', clickNotesToEdit: 'クリックして編集',
     addRule: 'ルールを追加', notesPlaceholder: 'このあて先のメモを追加…',
     selectDest: '配送先を選択', back: '← 戻る',
+    search: '配送先を検索…', filterAll: 'すべて', filterIssues: '問題あり', noResults: '一致する配送先なし',
     regions: { 'North America': '北米', 'Europe': 'ヨーロッパ', 'Latin America': 'ラテンアメリカ', 'Asia Pacific': 'アジア太平洋', 'Middle East': '中東', 'Suspended': '停止中' },
     sc: {
       ok:   { label: '正常',   pillLabel: '正常稼働' },
@@ -65,6 +68,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     notes: 'Notes', clickNotesToEdit: 'Cliquer pour modifier',
     addRule: 'Ajouter une règle', notesPlaceholder: 'Ajouter des notes pour cette destination…',
     selectDest: 'Sélectionner une destination', back: '← Retour',
+    search: 'Rechercher…', filterAll: 'Tous', filterIssues: 'Problèmes', noResults: 'Aucune destination',
     regions: { 'North America': 'Amérique du Nord', 'Europe': 'Europe', 'Latin America': 'Amérique latine', 'Asia Pacific': 'Asie-Pacifique', 'Middle East': 'Moyen-Orient', 'Suspended': 'Suspendu' },
     sc: {
       ok:   { label: 'OK',        pillLabel: 'Opérationnel' },
@@ -427,7 +431,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'FedEx: International Priority (IP) service only — standard and economy not accepted',
       'FedEx demand surcharge: JPY 485 per volumetric kg',
     ],
-    notes: 'DHL and FedEx available with surcharges from March 2026. FedEx limited to International Priority only. Japan Post and UPS suspended.',
+    notes: 'DHL and FedEx available with surcharges from March 2026. FedEx limited to International Priority only. UPS suspended.',
   },
   uae: {
     flagCode: 'ae', name: 'UAE', region: 'Middle East',
@@ -844,12 +848,35 @@ function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onA
 // ── Main dashboard ────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const [data, setData] = useState<Record<string, DestData>>(INITIAL_DATA);
+  const [data, setData] = useState<Record<string, DestData>>(() => {
+    try {
+      const saved = localStorage.getItem('japan-shipping-data');
+      if (saved) return { ...INITIAL_DATA, ...JSON.parse(saved) };
+    } catch {}
+    return INITIAL_DATA;
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('japan-shipping-data', JSON.stringify(data)); } catch {}
+  }, [data]);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>('en');
   const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
+  const [search, setSearch] = useState('');
+  const [issuesOnly, setIssuesOnly] = useState(false);
 
   const t = TRANSLATIONS[lang];
+
+  const searchLower = search.toLowerCase().trim();
+  const visibleRegions = REGIONS.map(region => ({
+    ...region,
+    ids: region.ids.filter(id => {
+      const d = data[id];
+      const matchesSearch = !searchLower || d.name.toLowerCase().includes(searchLower);
+      const matchesFilter = !issuesOnly || ['warn', 'no', 'q'].includes(overallStatus(d.carriers));
+      return matchesSearch && matchesFilter;
+    }),
+  })).filter(region => region.ids.length > 0);
 
   function patch(id: string, fn: (d: DestData) => DestData) {
     setData(prev => ({ ...prev, [id]: fn(prev[id]) }));
@@ -910,8 +937,30 @@ export default function Dashboard() {
 
       <div className={`body${mobileView === 'detail' ? ' body--detail' : ''}`}>
         <div className="sidebar">
+          <div className="sidebar-search">
+            <input
+              className="search-input"
+              type="search"
+              placeholder={t.search}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <div className="filter-row">
+              <button
+                className={`filter-btn${!issuesOnly ? ' active-all' : ''}`}
+                onClick={() => setIssuesOnly(false)}
+              >{t.filterAll}</button>
+              <button
+                className={`filter-btn${issuesOnly ? ' active-issues' : ''}`}
+                onClick={() => setIssuesOnly(true)}
+              >{t.filterIssues}</button>
+            </div>
+          </div>
           <div className="dest-list">
-            {REGIONS.map(region => (
+            {visibleRegions.length === 0 && (
+              <div className="no-results">{t.noResults}</div>
+            )}
+            {visibleRegions.map(region => (
               <div key={region.label}>
                 <div className="region-label">{t.regions[region.label] ?? region.label}</div>
                 {region.ids.map(id => {
