@@ -670,12 +670,22 @@ const CARRIER_LOGOS: Record<string, React.ReactNode> = {
 
 function getCarrierUrl(carrierName: string, flagCode: string | null): string | null {
   if (carrierName === 'Japan Post') {
+    // JP advisory page: sending FROM Japan to all destinations
     return 'https://www.post.japanpost.jp/service/send/oversea/information/overview.html';
   }
   if (!flagCode) return null;
-  if (carrierName === 'DHL')   return `https://www.dhl.com/${flagCode}-en/home/express.html`;
-  if (carrierName === 'FedEx') return `https://www.fedex.com/en-${flagCode}/shipping/international.html`;
-  if (carrierName === 'UPS')   return `https://www.ups.com/${flagCode}/en/Home.page`;
+  if (carrierName === 'DHL') {
+    // Destination country's DHL Express import page (receiving DHL shipments into that country)
+    return `https://www.dhl.com/${flagCode}-en/home/express/import.html`;
+  }
+  if (carrierName === 'FedEx') {
+    // Destination country's FedEx international shipping page, English version
+    return `https://www.fedex.com/en-${flagCode}/shipping/international.html`;
+  }
+  if (carrierName === 'UPS') {
+    // Destination country's UPS international shipping page, English version
+    return `https://www.ups.com/${flagCode}/en/shipping/international.page`;
+  }
   return null;
 }
 
