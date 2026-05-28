@@ -31,7 +31,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     notes: 'Notes', clickNotesToEdit: 'Click to edit',
     addRule: 'Add rule', notesPlaceholder: 'Add notes for this destination…',
     selectDest: 'Select a destination', back: '← Back',
-    regions: { 'North America': 'North America', 'Europe': 'Europe', 'Latin America': 'Latin America', 'Asia Pacific': 'Asia Pacific', 'Suspended': 'Suspended' },
+    regions: { 'North America': 'North America', 'Europe': 'Europe', 'Latin America': 'Latin America', 'Asia Pacific': 'Asia Pacific', 'Middle East': 'Middle East', 'Suspended': 'Suspended' },
     sc: {
       ok:   { label: 'OK',        pillLabel: 'Operational' },
       warn: { label: 'Caution',   pillLabel: 'Check before booking' },
@@ -48,7 +48,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     notes: 'メモ', clickNotesToEdit: 'クリックして編集',
     addRule: 'ルールを追加', notesPlaceholder: 'このあて先のメモを追加…',
     selectDest: '配送先を選択', back: '← 戻る',
-    regions: { 'North America': '北米', 'Europe': 'ヨーロッパ', 'Latin America': 'ラテンアメリカ', 'Asia Pacific': 'アジア太平洋', 'Suspended': '停止中' },
+    regions: { 'North America': '北米', 'Europe': 'ヨーロッパ', 'Latin America': 'ラテンアメリカ', 'Asia Pacific': 'アジア太平洋', 'Middle East': '中東', 'Suspended': '停止中' },
     sc: {
       ok:   { label: '正常',   pillLabel: '正常稼働' },
       warn: { label: '要注意', pillLabel: '要確認' },
@@ -65,7 +65,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     notes: 'Notes', clickNotesToEdit: 'Cliquer pour modifier',
     addRule: 'Ajouter une règle', notesPlaceholder: 'Ajouter des notes pour cette destination…',
     selectDest: 'Sélectionner une destination', back: '← Retour',
-    regions: { 'North America': 'Amérique du Nord', 'Europe': 'Europe', 'Latin America': 'Amérique latine', 'Asia Pacific': 'Asie-Pacifique', 'Suspended': 'Suspendu' },
+    regions: { 'North America': 'Amérique du Nord', 'Europe': 'Europe', 'Latin America': 'Amérique latine', 'Asia Pacific': 'Asie-Pacifique', 'Middle East': 'Moyen-Orient', 'Suspended': 'Suspendu' },
     sc: {
       ok:   { label: 'OK',        pillLabel: 'Opérationnel' },
       warn: { label: 'Attention', pillLabel: 'À vérifier avant' },
@@ -90,7 +90,8 @@ const REGIONS: Array<{ label: string; ids: string[] }> = [
   { label: 'Europe',        ids: ['uk', 'germany', 'france', 'spain', 'italy', 'benelux', 'sweden', 'norway', 'denmark', 'finland'] },
   { label: 'Latin America', ids: ['brazil', 'latam'] },
   { label: 'Asia Pacific',  ids: ['australia', 'china', 'korea', 'taiwan', 'singapore', 'apac'] },
-  { label: 'Suspended',     ids: ['mideast', 'russia'] },
+  { label: 'Middle East',   ids: ['israel', 'uae', 'saudi', 'qatar', 'kuwait', 'jordan', 'oman', 'bahrain', 'lebanon', 'iraq', 'yemen', 'syria'] },
+  { label: 'Suspended',     ids: ['russia'] },
 ];
 
 const INITIAL_DATA: Record<string, DestData> = {
@@ -325,16 +326,185 @@ const INITIAL_DATA: Record<string, DestData> = {
     rules: ['Always verify JP acceptance per country before booking', 'Carrier service levels vary significantly across this region'],
     notes: 'Status changes frequently. Check carrier advisory pages before booking.',
   },
-  mideast: {
-    flagCode: null, name: 'Middle East', region: 'Middle East',
+  israel: {
+    flagCode: 'il', name: 'Israel', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'International Priority (IP) only. Demand surcharge: JPY 485/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill — charged at DHL facility processing',
+      'FedEx: International Priority (IP) service only — standard and economy not accepted',
+      'FedEx demand surcharge: JPY 485 per volumetric kg',
+    ],
+    notes: 'DHL and FedEx available with surcharges from March 2026. FedEx limited to International Priority only. Japan Post and UPS suspended.',
+  },
+  uae: {
+    flagCode: 'ae', name: 'UAE', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'FedEx: extreme delays expected — Dubai airport hub currently unavailable',
+      'FedEx demand surcharge: JPY 226 per volumetric kg — avoid FedEx for time-sensitive shipments',
+    ],
+    notes: 'DHL is the recommended carrier. FedEx technically available but experiencing extreme delays due to Dubai hub disruption. Japan Post and UPS suspended.',
+  },
+  saudi: {
+    flagCode: 'sa', name: 'Saudi Arabia', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
+      'FedEx demand surcharge: JPY 226 per volumetric kg',
+    ],
+    notes: 'DHL recommended. FedEx available but extreme delays due to Dubai hub. Japan Post and UPS suspended.',
+  },
+  qatar: {
+    flagCode: 'qa', name: 'Qatar', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
+      'FedEx demand surcharge: JPY 226 per volumetric kg',
+    ],
+    notes: '',
+  },
+  kuwait: {
+    flagCode: 'kw', name: 'Kuwait', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
+      'FedEx demand surcharge: JPY 226 per volumetric kg',
+    ],
+    notes: '',
+  },
+  jordan: {
+    flagCode: 'jo', name: 'Jordan', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
+      'FedEx demand surcharge: JPY 226 per volumetric kg',
+    ],
+    notes: '',
+  },
+  oman: {
+    flagCode: 'om', name: 'Oman', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
+      'FedEx demand surcharge: JPY 226 per volumetric kg',
+    ],
+    notes: '',
+  },
+  bahrain: {
+    flagCode: 'bh', name: 'Bahrain', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
+      'FedEx demand surcharge: JPY 226 per volumetric kg',
+    ],
+    notes: '',
+  },
+  lebanon: {
+    flagCode: 'lb', name: 'Lebanon', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
+      'FedEx demand surcharge: JPY 226 per volumetric kg',
+    ],
+    notes: '',
+  },
+  iraq: {
+    flagCode: 'iq', name: 'Iraq', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational with restrictions. Surcharge: JPY 5,000 per waybill + Restricted Destination Fee.' },
+    ],
+    rules: [
+      'DHL: JPY 5,000 surcharge + additional Restricted Destination Fee per waybill',
+      'Confirm DHL restricted destination fee amount before booking',
+      'FedEx: extreme delays — Dubai hub offline; demand surcharge JPY 226/vol. kg',
+    ],
+    notes: 'DHL operates with an additional Restricted Destination Fee on top of the standard surcharge. Verify total fees with DHL before booking.',
+  },
+  yemen: {
+    flagCode: 'ye', name: 'Yemen', region: 'Middle East',
     carriers: [
       { name: 'Japan Post', s: 'no', note: 'Service suspended.' },
-      { name: 'FedEx',      s: 'no', note: 'Suspended — actively adjusting to situation.' },
-      { name: 'UPS',        s: 'no', note: 'Service impacts — do not book.' },
-      { name: 'DHL',        s: 'no', note: 'Status page unavailable — do not book.' },
+      { name: 'FedEx',      s: 'no', note: 'Service unavailable / unconfirmed — do not book.' },
+      { name: 'UPS',        s: 'no', note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational with restrictions. Surcharge: JPY 5,000 per waybill + Restricted Destination Fee.' },
     ],
-    rules: ['Do not accept new orders destined for this region', 'If already in transit — contact carrier ops immediately'],
-    notes: 'All four carriers suspended or significantly impacted. No exceptions without ops manager approval.',
+    rules: [
+      'FedEx: service unavailable — do not accept FedEx orders for Yemen',
+      'DHL: JPY 5,000 surcharge + Restricted Destination Fee per waybill',
+      'Confirm DHL acceptance and fee amount before creating shipment',
+    ],
+    notes: 'FedEx unavailable. DHL available with restricted destination surcharge — confirm explicitly before booking.',
+  },
+  syria: {
+    flagCode: 'sy', name: 'Syria', region: 'Middle East',
+    carriers: [
+      { name: 'Japan Post', s: 'no', note: 'Service suspended.' },
+      { name: 'FedEx',      s: 'no', note: 'Service unavailable / unconfirmed — do not book.' },
+      { name: 'UPS',        s: 'no', note: 'Service suspended.' },
+      { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'FedEx: service unavailable — do not accept FedEx orders for Syria',
+      'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
+      'Verify DHL acceptance before booking',
+    ],
+    notes: 'FedEx unavailable. DHL available with standard Middle East surcharge.',
   },
   russia: {
     flagCode: 'ru', name: 'Russia / Belarus', region: 'Eastern Europe',
@@ -367,9 +537,9 @@ function FlagImg({ code, w = 20 }: { code: string | null; w?: number }) {
     <img
       src={`https://flagcdn.com/w${w}/${code}.png`}
       srcSet={`https://flagcdn.com/w${w * 2}/${code}.png 2x`}
-      width={w} height={Math.round(w * 0.75)}
+      width={w}
       alt={code.toUpperCase()}
-      style={{ display: 'block', borderRadius: 2 }}
+      style={{ display: 'block', borderRadius: 2, height: 'auto' }}
     />
   );
 }
