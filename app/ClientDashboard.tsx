@@ -89,7 +89,7 @@ const REGIONS: Array<{ label: string; ids: string[] }> = [
   { label: 'North America', ids: ['usa', 'canada', 'mexico'] },
   { label: 'Europe',        ids: ['uk', 'germany', 'france', 'spain', 'italy', 'benelux', 'sweden', 'norway', 'denmark', 'finland'] },
   { label: 'Latin America', ids: ['brazil', 'latam'] },
-  { label: 'Asia Pacific',  ids: ['australia', 'china', 'korea', 'taiwan', 'singapore', 'apac'] },
+  { label: 'Asia Pacific',  ids: ['australia', 'newzealand', 'china', 'hongkong', 'korea', 'taiwan', 'singapore', 'malaysia', 'thailand', 'vietnam', 'philippines', 'indonesia', 'india', 'apac'] },
   { label: 'Middle East',   ids: ['israel', 'uae', 'saudi', 'qatar', 'kuwait', 'jordan', 'oman', 'bahrain', 'lebanon', 'iraq', 'yemen', 'syria'] },
   { label: 'Suspended',     ids: ['russia'] },
 ];
@@ -315,6 +315,94 @@ const INITIAL_DATA: Record<string, DestData> = {
     rules: ['All imports over SGD 400 subject to GST', 'Chewing gum and certain goods prohibited — check restricted items list'],
     notes: '',
   },
+  newzealand: {
+    flagCode: 'nz', name: 'New Zealand', region: 'Asia Pacific',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['Strict biosecurity — do not ship food, plants, or animal products', 'Goods over NZD 1,000 subject to customs duty and GST', 'Declare full value on all shipments'],
+    notes: '',
+  },
+  hongkong: {
+    flagCode: 'hk', name: 'Hong Kong', region: 'Asia Pacific',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — all services available (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['No import duty on most goods — one of the most open customs regimes', 'Full declared value required', 'Some items require permits — check restricted goods list for electronics/cosmetics'],
+    notes: '',
+  },
+  malaysia: {
+    flagCode: 'my', name: 'Malaysia', region: 'Asia Pacific',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['Declare full value on all shipments', 'Food items: halal certification required for import', 'Goods over MYR 500 subject to customs duty and SST'],
+    notes: '',
+  },
+  thailand: {
+    flagCode: 'th', name: 'Thailand', region: 'Asia Pacific',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['Cosmetics, supplements, and food items require Thai FDA approval to import', 'Declare full value — Thai customs compares declared vs. market value', 'Goods subject to customs duty; rate varies by HS code'],
+    notes: '',
+  },
+  vietnam: {
+    flagCode: 'vn', name: 'Vietnam', region: 'Asia Pacific',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['Detailed commercial invoice required for all shipments', 'Recipient tax ID (MST) required for B2B shipments', 'Cosmetics and health products require Ministry of Health import approval', 'Goods subject to import duty and VAT — rate varies by category'],
+    notes: '',
+  },
+  philippines: {
+    flagCode: 'ph', name: 'Philippines', region: 'Asia Pacific',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['De minimis threshold PHP 10,000 — goods above subject to customs duty and VAT', 'Food and regulated items require prior import clearance from relevant agencies', 'Declare full value — Bureau of Customs actively audits declared values'],
+    notes: '',
+  },
+  indonesia: {
+    flagCode: 'id', name: 'Indonesia', region: 'Asia Pacific',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['Recipient tax ID (NPWP) required for shipments over USD 75', 'Many product categories require import permits — verify before shipping', 'Strict labelling requirements for food, cosmetics, and electronics', 'Declare full value — customs scrutiny is high'],
+    notes: 'Indonesia customs is among the most complex in APAC. Confirm import permit requirements for the specific product category before shipping.',
+  },
+  india: {
+    flagCode: 'in', name: 'India', region: 'Asia Pacific',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['Import duty applies to most goods — rate varies by HS code', 'Electronics, supplements, and cosmetics may require BIS or FSSAI import licence', 'Recipient PAN or IEC number required for commercial shipments', 'Declare full value — undervaluation is aggressively flagged by Indian customs'],
+    notes: 'Indian customs compliance requirements are complex and product-category specific. Verify applicable import regulations with the carrier before booking.',
+  },
   apac: {
     flagCode: null, name: 'Asia Pacific (other)', region: 'Asia Pacific — excl. listed',
     carriers: [
@@ -404,7 +492,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   jordan: {
     flagCode: 'jo', name: 'Jordan', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -434,7 +522,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   bahrain: {
     flagCode: 'bh', name: 'Bahrain', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -449,7 +537,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   lebanon: {
     flagCode: 'lb', name: 'Lebanon', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -509,13 +597,13 @@ const INITIAL_DATA: Record<string, DestData> = {
   russia: {
     flagCode: 'ru', name: 'Russia / Belarus', region: 'Eastern Europe',
     carriers: [
-      { name: 'Japan Post', s: 'no', note: 'Service suspended.' },
-      { name: 'FedEx',      s: 'no', note: 'Suspended indefinitely.' },
-      { name: 'UPS',        s: 'no', note: 'Service suspended.' },
-      { name: 'DHL',        s: 'no', note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'warn', note: 'JP advisory lists service as available (Apr 2026) — verify export compliance and sanctions before booking.' },
+      { name: 'FedEx',      s: 'no',   note: 'Suspended indefinitely.' },
+      { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
+      { name: 'DHL',        s: 'no',   note: 'Service suspended.' },
     ],
-    rules: ['All carriers suspended — no exceptions', 'Refund any orders received from these destinations'],
-    notes: 'FedEx suspension is indefinite. Do not accept or hold orders for Russia or Belarus.',
+    rules: ['FedEx, UPS, DHL: all suspended — no exceptions', 'Japan Post: listed as operational on JP advisory — confirm export compliance and sanctions before accepting', 'Refund any orders where carrier cannot be confirmed'],
+    notes: 'FedEx, DHL, UPS remain suspended. Japan Post appears to have resumed service (confirmed on JP advisory Apr 2026) but export control and sanctions compliance must be verified before booking.',
   },
 };
 
