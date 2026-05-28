@@ -6,7 +6,7 @@ type Lang = 'en' | 'ja' | 'fr';
 type CarrierStatus = 'ok' | 'warn' | 'no' | 'q';
 
 interface Carrier { name: string; s: CarrierStatus; note: string; }
-interface DestData { flagCode: string | null; name: string; region: string; carriers: Carrier[]; rules: string[]; notes: string; lastChecked?: string; surcharge?: string; }
+interface DestData { flagCode: string | null; name: string; region: string; carriers: Carrier[]; rules: string[]; notes: string; lastChecked?: string; surcharge?: string; statusOverride?: CarrierStatus; }
 
 // ── Translations ──────────────────────────────────────────────────
 
@@ -830,6 +830,10 @@ function overallStatus(carriers: Carrier[]): CarrierStatus {
   return 'ok';
 }
 
+function effectiveStatus(dest: DestData): CarrierStatus {
+  return dest.statusOverride ?? overallStatus(dest.carriers);
+}
+
 function autoResize(el: HTMLTextAreaElement) {
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 'px';
@@ -840,22 +844,24 @@ function autoResize(el: HTMLTextAreaElement) {
 interface DetailProps {
   dest: DestData;
   t: Translation;
-  onCarrierStatus: (ci: number, val: CarrierStatus) => void;
-  onCarrierNote:   (ci: number, val: string) => void;
-  onRuleChange:    (ri: number, val: string) => void;
-  onAddRule:       () => void;
-  onDeleteRule:    (ri: number) => void;
-  onNotesChange:   (val: string) => void;
+  onCarrierStatus:  (ci: number, val: CarrierStatus) => void;
+  onCarrierNote:    (ci: number, val: string) => void;
+  onRuleChange:     (ri: number, val: string) => void;
+  onAddRule:        () => void;
+  onDeleteRule:     (ri: number) => void;
+  onNotesChange:    (val: string) => void;
+  onStatusOverride: (val: CarrierStatus | undefined) => void;
 }
 
-function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onAddRule, onDeleteRule, onNotesChange }: DetailProps) {
+function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onAddRule, onDeleteRule, onNotesChange, onStatusOverride }: DetailProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     containerRef.current?.querySelectorAll<HTMLTextAreaElement>('textarea').forEach(autoResize);
   }, []);
 
-  const ov = overallStatus(dest.carriers);
+  const calcOv = overallStatus(dest.carriers);
+  const ov = dest.statusOverride ?? calcOv;
 
   return (
     <div className="dp" ref={containerRef}>
@@ -870,7 +876,21 @@ function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onA
             {dest.lastChecked && <span className="dest-verified"> · {t.lastChecked} {dest.lastChecked}</span>}
           </div>
         </div>
-        <span className={`overall-pill ${SC_CSS[ov].pillCls}`}>{t.sc[ov].pillLabel}</span>
+        <div className={`overall-pill ${SC_CSS[ov].pillCls}${dest.statusOverride ? ' overall-pill--override' : ''}`}>
+          <select
+            className="overall-select"
+            value={dest.statusOverride ?? ''}
+            onChange={e => onStatusOverride(e.target.value === '' ? undefined : e.target.value as CarrierStatus)}
+            title={dest.statusOverride ? 'Status overridden — select Auto to reset' : 'Override overall status'}
+          >
+            <option value="">Auto — {t.sc[calcOv].pillLabel}</option>
+            <option value="ok">{t.sc.ok.pillLabel}</option>
+            <option value="warn">{t.sc.warn.pillLabel}</option>
+            <option value="no">{t.sc.no.pillLabel}</option>
+            <option value="q">{t.sc.q.pillLabel}</option>
+          </select>
+          <span className="overall-chevron" aria-hidden="true">▾</span>
+        </div>
       </div>
 
       {dest.surcharge && (
@@ -1005,6 +1025,17 @@ export default function Dashboard() {
   const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
   const [search, setSearch] = useState('');
   const [issuesOnly, setIssuesOnly] = useState(false);
+  const [fontSize, setFontSize] = useState<'normal' | 'large'>('normal');
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('japan-shipping-font') === 'large') setFontSize('large');
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem('japan-shipping-font', fontSize); } catch {}
+  }, [fontSize]);
 
   const t = TRANSLATIONS[lang];
 
@@ -1014,7 +1045,7 @@ export default function Dashboard() {
     ids: region.ids.filter(id => {
       const d = data[id];
       const matchesSearch = !searchLower || d.name.toLowerCase().includes(searchLower);
-      const matchesFilter = !issuesOnly || ['warn', 'no', 'q'].includes(overallStatus(d.carriers));
+      const matchesFilter = !issuesOnly || ['warn', 'no', 'q'].includes(effectiveStatus(d));
       return matchesSearch && matchesFilter;
     }),
   })).filter(region => region.ids.length > 0);
@@ -1051,8 +1082,12 @@ export default function Dashboard() {
     patch(id, d => ({ ...d, notes: val }));
   }
 
+  function handleStatusOverride(id: string, val: CarrierStatus | undefined) {
+    patch(id, d => ({ ...d, statusOverride: val }));
+  }
+
   return (
-    <div className="dash">
+    <div className={`dash${fontSize === 'large' ? ' dash--large' : ''}`}>
       <h2 className="sr-only">Japan shipping ops — carrier &amp; destination guide</h2>
 
       <div className="hdr">
@@ -1062,6 +1097,10 @@ export default function Dashboard() {
         </div>
         <div className="hdr-right">
           <div className="updated">{t.updated}</div>
+          <div className="font-toggle">
+            <button className={`font-btn${fontSize === 'normal' ? ' active' : ''}`} onClick={() => setFontSize('normal')} aria-label="Normal text size">A</button>
+            <button className={`font-btn${fontSize === 'large' ? ' active' : ''}`} onClick={() => setFontSize('large')} aria-label="Large text size">A+</button>
+          </div>
           <div className="lang-toggle">
             {(['en', 'ja', 'fr'] as Lang[]).map(l => (
               <button
@@ -1106,7 +1145,7 @@ export default function Dashboard() {
                 <div className="region-label">{t.regions[region.label] ?? region.label}</div>
                 {region.ids.map(id => {
                   const d = data[id];
-                  const ov = overallStatus(d.carriers);
+                  const ov = effectiveStatus(d);
                   return (
                     <button
                       key={id}
@@ -1137,6 +1176,7 @@ export default function Dashboard() {
               onAddRule={() => handleAddRule(currentId)}
               onDeleteRule={ri => handleDeleteRule(currentId, ri)}
               onNotesChange={val => handleNotesChange(currentId, val)}
+              onStatusOverride={val => handleStatusOverride(currentId, val)}
             />
           ) : (
             <div className="placeholder">
