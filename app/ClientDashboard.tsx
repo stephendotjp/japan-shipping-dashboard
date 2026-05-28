@@ -666,6 +666,19 @@ const CARRIER_LOGOS: Record<string, React.ReactNode> = {
   ),
 };
 
+// ── Carrier country URL lookup ────────────────────────────────────
+
+function getCarrierUrl(carrierName: string, flagCode: string | null): string | null {
+  if (carrierName === 'Japan Post') {
+    return 'https://www.post.japanpost.jp/service/send/oversea/information/overview.html';
+  }
+  if (!flagCode) return null;
+  if (carrierName === 'DHL')   return `https://www.dhl.com/${flagCode}-en/home/express.html`;
+  if (carrierName === 'FedEx') return `https://www.fedex.com/en-${flagCode}/shipping/international.html`;
+  if (carrierName === 'UPS')   return `https://www.ups.com/${flagCode}/en/Home.page`;
+  return null;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────
 
 function overallStatus(carriers: Carrier[]): CarrierStatus {
@@ -722,39 +735,53 @@ function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onA
         </div>
         <table className="carrier-table">
           <tbody>
-            {dest.carriers.map((c, ci) => (
-              <tr key={ci}>
-                <td className="ct-logo">
-                  {CARRIER_LOGOS[c.name] ?? <span className="ct-name-fallback">{c.name}</span>}
-                  <span className="sr-only">{c.name}</span>
-                </td>
-                <td className="ct-note">
-                  <textarea
-                    className="rule-text"
-                    rows={1}
-                    style={{ width: '100%', padding: 0 }}
-                    value={c.note}
-                    onChange={e => { onCarrierNote(ci, e.target.value); autoResize(e.target); }}
-                  />
-                </td>
-                <td className="ct-status">
-                  <div className={`status-select-wrap ${SC_CSS[c.s].wrapCls}`}>
-                    <div className="status-dot" />
-                    <select
-                      className="status-select"
-                      value={c.s}
-                      onChange={e => onCarrierStatus(ci, e.target.value as CarrierStatus)}
-                    >
-                      <option value="ok">{t.options.ok}</option>
-                      <option value="warn">{t.options.warn}</option>
-                      <option value="no">{t.options.no}</option>
-                      <option value="q">{t.options.q}</option>
-                    </select>
-                    <span className="chevron-icon" aria-hidden="true">▾</span>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {dest.carriers.map((c, ci) => {
+              const infoUrl = c.s !== 'no' ? getCarrierUrl(c.name, dest.flagCode) : null;
+              return (
+                <tr key={ci}>
+                  <td className="ct-logo">
+                    {CARRIER_LOGOS[c.name] ?? <span className="ct-name-fallback">{c.name}</span>}
+                    <span className="sr-only">{c.name}</span>
+                  </td>
+                  <td className="ct-note">
+                    <textarea
+                      className="rule-text"
+                      rows={1}
+                      style={{ width: '100%', padding: 0 }}
+                      value={c.note}
+                      onChange={e => { onCarrierNote(ci, e.target.value); autoResize(e.target); }}
+                    />
+                  </td>
+                  <td className="ct-status">
+                    <div className={`status-select-wrap ${SC_CSS[c.s].wrapCls}`}>
+                      <div className="status-dot" />
+                      <select
+                        className="status-select"
+                        value={c.s}
+                        onChange={e => onCarrierStatus(ci, e.target.value as CarrierStatus)}
+                      >
+                        <option value="ok">{t.options.ok}</option>
+                        <option value="warn">{t.options.warn}</option>
+                        <option value="no">{t.options.no}</option>
+                        <option value="q">{t.options.q}</option>
+                      </select>
+                      <span className="chevron-icon" aria-hidden="true">▾</span>
+                    </div>
+                  </td>
+                  <td className="ct-link">
+                    {infoUrl && (
+                      <a href={infoUrl} target="_blank" rel="noopener noreferrer" className="carrier-link-btn" title={`${c.name} — ${dest.name}`}>
+                        <svg width="11" height="11" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M4.5 2H1.5A.5.5 0 0 0 1 2.5v6A.5.5 0 0 0 1.5 9h6A.5.5 0 0 0 8 8.5V6" />
+                          <polyline points="6.5,1 9,1 9,3.5" />
+                          <line x1="9" y1="1" x2="5" y2="5" />
+                        </svg>
+                      </a>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
