@@ -164,24 +164,24 @@ const INITIAL_DATA: Record<string, DestData> = {
   spain: {
     flagCode: 'es', name: 'Spain', region: 'Europe',
     carriers: [
-      { name: 'Japan Post', s: 'warn', note: 'Check JP advisory — suspensions have applied.' },
-      { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
-      { name: 'UPS',        s: 'ok',   note: 'Operational.' },
-      { name: 'DHL',        s: 'ok',   note: 'Operational.' },
+      { name: 'Japan Post', s: 'ok', note: 'Operational (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Verify Japan Post acceptance before booking', 'IOSS number required for B2C orders under €150'],
-    notes: 'Spain has periodically appeared on JP suspension lists. Always confirm JP on day of booking.',
+    rules: ['IOSS number required for B2C orders under €150'],
+    notes: 'Japan Post confirmed operational as of April 2026. Previously appeared on suspension lists — monitor JP advisory for changes.',
   },
   italy: {
     flagCode: 'it', name: 'Italy', region: 'Europe',
     carriers: [
-      { name: 'Japan Post', s: 'warn', note: 'Check JP advisory — suspensions have applied.' },
-      { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
-      { name: 'UPS',        s: 'ok',   note: 'Operational.' },
-      { name: 'DHL',        s: 'ok',   note: 'Operational.' },
+      { name: 'Japan Post', s: 'ok', note: 'Operational (confirmed Apr 2026).' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Verify Japan Post acceptance before booking', 'Codice Fiscale may be required for some shipments', 'IOSS number required for B2C orders under €150'],
-    notes: 'Italy has periodically appeared on JP suspension lists. Always confirm JP on day of booking.',
+    rules: ['Codice Fiscale may be required for some shipments', 'IOSS number required for B2C orders under €150'],
+    notes: 'Japan Post confirmed operational as of April 2026. Previously appeared on suspension lists — monitor JP advisory for changes.',
   },
   benelux: {
     flagCode: 'be', name: 'Belgium / Netherlands', region: 'Europe',
@@ -274,7 +274,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   china: {
     flagCode: 'cn', name: 'China', region: 'Asia Pacific',
     carriers: [
-      { name: 'Japan Post', s: 'warn', note: 'Check advisory — periodic delays and restrictions.' },
+      { name: 'Japan Post', s: 'ok', note: 'Operational — all services confirmed (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
@@ -329,7 +329,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   israel: {
     flagCode: 'il', name: 'Israel', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'International Priority (IP) only. Demand surcharge: JPY 485/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -344,7 +344,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   uae: {
     flagCode: 'ae', name: 'UAE', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -359,7 +359,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   saudi: {
     flagCode: 'sa', name: 'Saudi Arabia', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -374,7 +374,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   qatar: {
     flagCode: 'qa', name: 'Qatar', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -389,7 +389,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   kuwait: {
     flagCode: 'kw', name: 'Kuwait', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -419,7 +419,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   oman: {
     flagCode: 'om', name: 'Oman', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
@@ -464,7 +464,7 @@ const INITIAL_DATA: Record<string, DestData> = {
   iraq: {
     flagCode: 'iq', name: 'Iraq', region: 'Middle East',
     carriers: [
-      { name: 'Japan Post', s: 'no',   note: 'Service suspended.' },
+      { name: 'Japan Post', s: 'warn', note: 'Listed as operational on JP advisory (Apr 2026) — verify acceptance before booking.' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'warn', note: 'Operational with restrictions. Surcharge: JPY 5,000 per waybill + Restricted Destination Fee.' },
