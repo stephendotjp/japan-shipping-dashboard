@@ -247,3 +247,55 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Rule text color ── */
 .rule-item .rule-text { color: #e05252; }
+
+/* ── Header right cluster ── */
+.hdr-right { display: flex; align-items: center; gap: 10px; }
+
+/* ── Mobile back button (hidden on desktop) ── */
+.back-btn { display: none; }
+
+/* ── Responsive: mobile-first ── */
+@media (max-width: 767px) {
+  .dash { height: 100dvh; }
+
+  .hdr { flex-wrap: wrap; gap: 6px; padding: 0.75rem 1rem; }
+  .updated { display: none; }
+
+  .body { flex-direction: column; }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    flex: 1;
+  }
+
+  .body--detail .sidebar { display: none; }
+
+  .detail { display: none; }
+  .body--detail .detail { display: block; flex: 1; overflow-y: auto; }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-background-primary);
+    border: none;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 0.75rem 1.25rem;
+    width: 100%;
+    text-align: left;
+  }
+  .back-btn:active { background: var(--color-background-secondary); }
+
+  .dest-btn { min-height: 44px; }
+
+  .ct-logo { width: 65px; padding-right: 8px !important; }
+  .ct-status { width: 110px; }
+}

@@ -16,6 +16,7 @@ interface Translation {
   countryRules: string; clickToEdit: string;
   notes: string; clickNotesToEdit: string;
   addRule: string; notesPlaceholder: string; selectDest: string;
+  back: string;
   regions: Record<string, string>;
   sc: Record<CarrierStatus, { label: string; pillLabel: string }>;
   options: Record<CarrierStatus, string>;
@@ -29,7 +30,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     countryRules: 'Country rules', clickToEdit: 'Click any rule to edit',
     notes: 'Notes', clickNotesToEdit: 'Click to edit',
     addRule: 'Add rule', notesPlaceholder: 'Add notes for this destination…',
-    selectDest: 'Select a destination',
+    selectDest: 'Select a destination', back: '← Back',
     regions: { 'North America': 'North America', 'Europe': 'Europe', 'Latin America': 'Latin America', 'Asia Pacific': 'Asia Pacific', 'Suspended': 'Suspended' },
     sc: {
       ok:   { label: 'OK',        pillLabel: 'Operational' },
@@ -46,7 +47,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     countryRules: '国別ルール', clickToEdit: 'クリックして編集',
     notes: 'メモ', clickNotesToEdit: 'クリックして編集',
     addRule: 'ルールを追加', notesPlaceholder: 'このあて先のメモを追加…',
-    selectDest: '配送先を選択',
+    selectDest: '配送先を選択', back: '← 戻る',
     regions: { 'North America': '北米', 'Europe': 'ヨーロッパ', 'Latin America': 'ラテンアメリカ', 'Asia Pacific': 'アジア太平洋', 'Suspended': '停止中' },
     sc: {
       ok:   { label: '正常',   pillLabel: '正常稼働' },
@@ -63,7 +64,7 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     countryRules: 'Règles par pays', clickToEdit: 'Cliquer pour modifier',
     notes: 'Notes', clickNotesToEdit: 'Cliquer pour modifier',
     addRule: 'Ajouter une règle', notesPlaceholder: 'Ajouter des notes pour cette destination…',
-    selectDest: 'Sélectionner une destination',
+    selectDest: 'Sélectionner une destination', back: '← Retour',
     regions: { 'North America': 'Amérique du Nord', 'Europe': 'Europe', 'Latin America': 'Amérique latine', 'Asia Pacific': 'Asie-Pacifique', 'Suspended': 'Suspendu' },
     sc: {
       ok:   { label: 'OK',        pillLabel: 'Opérationnel' },
@@ -551,6 +552,7 @@ export default function Dashboard() {
   const [data, setData] = useState<Record<string, DestData>>(INITIAL_DATA);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>('en');
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
 
   const t = TRANSLATIONS[lang];
 
@@ -595,7 +597,7 @@ export default function Dashboard() {
           <div className="hdr-title">{t.title}</div>
           <div className="hdr-sub">{t.subtitle}</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="hdr-right">
           <div className="updated">{t.updated}</div>
           <div className="lang-toggle">
             {(['en', 'ja', 'fr'] as Lang[]).map(l => (
@@ -611,7 +613,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="body">
+      <div className={`body${mobileView === 'detail' ? ' body--detail' : ''}`}>
         <div className="sidebar">
           <div className="dest-list">
             {REGIONS.map(region => (
@@ -624,7 +626,7 @@ export default function Dashboard() {
                     <button
                       key={id}
                       className={`dest-btn${currentId === id ? ' active' : ''}`}
-                      onClick={() => setCurrentId(id)}
+                      onClick={() => { setCurrentId(id); setMobileView('detail'); }}
                     >
                       <span className="dflag"><FlagImg code={d.flagCode} w={20} /></span>
                       <span className="dname">{d.name}</span>
@@ -638,6 +640,7 @@ export default function Dashboard() {
         </div>
 
         <div className="detail">
+          <button className="back-btn" onClick={() => setMobileView('list')}>{t.back}</button>
           {currentId ? (
             <DestDetail
               key={currentId}
