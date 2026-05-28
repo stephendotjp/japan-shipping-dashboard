@@ -6,7 +6,7 @@ type Lang = 'en' | 'ja' | 'fr';
 type CarrierStatus = 'ok' | 'warn' | 'no' | 'q';
 
 interface Carrier { name: string; s: CarrierStatus; note: string; }
-interface DestData { flagCode: string | null; name: string; region: string; carriers: Carrier[]; rules: string[]; notes: string; }
+interface DestData { flagCode: string | null; name: string; region: string; carriers: Carrier[]; rules: string[]; notes: string; lastChecked?: string; surcharge?: string; }
 
 // ── Translations ──────────────────────────────────────────────────
 
@@ -18,6 +18,7 @@ interface Translation {
   addRule: string; notesPlaceholder: string; selectDest: string;
   back: string;
   search: string; filterAll: string; filterIssues: string; noResults: string;
+  lastChecked: string;
   regions: Record<string, string>;
   sc: Record<CarrierStatus, { label: string; pillLabel: string }>;
   options: Record<CarrierStatus, string>;
@@ -33,7 +34,8 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     addRule: 'Add rule', notesPlaceholder: 'Add notes for this destination…',
     selectDest: 'Select a destination', back: '← Back',
     search: 'Search destinations…', filterAll: 'All', filterIssues: 'Issues only', noResults: 'No destinations match',
-    regions: { 'North America': 'North America', 'Europe': 'Europe', 'Latin America': 'Latin America', 'Asia Pacific': 'Asia Pacific', 'Middle East': 'Middle East', 'Suspended': 'Suspended' },
+    lastChecked: 'Verified',
+    regions: { 'North America': 'North America', 'Europe': 'Europe', 'Latin America': 'Latin America', 'Asia Pacific': 'Asia Pacific', 'Middle East': 'Middle East', 'Africa': 'Africa', 'Suspended': 'Suspended' },
     sc: {
       ok:   { label: 'OK',        pillLabel: 'Operational' },
       warn: { label: 'Caution',   pillLabel: 'Check before booking' },
@@ -51,7 +53,8 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     addRule: 'ルールを追加', notesPlaceholder: 'このあて先のメモを追加…',
     selectDest: '配送先を選択', back: '← 戻る',
     search: '配送先を検索…', filterAll: 'すべて', filterIssues: '問題あり', noResults: '一致する配送先なし',
-    regions: { 'North America': '北米', 'Europe': 'ヨーロッパ', 'Latin America': 'ラテンアメリカ', 'Asia Pacific': 'アジア太平洋', 'Middle East': '中東', 'Suspended': '停止中' },
+    lastChecked: '確認日',
+    regions: { 'North America': '北米', 'Europe': 'ヨーロッパ', 'Latin America': 'ラテンアメリカ', 'Asia Pacific': 'アジア太平洋', 'Middle East': '中東', 'Africa': 'アフリカ', 'Suspended': '停止中' },
     sc: {
       ok:   { label: '正常',   pillLabel: '正常稼働' },
       warn: { label: '要注意', pillLabel: '要確認' },
@@ -69,7 +72,8 @@ const TRANSLATIONS: Record<Lang, Translation> = {
     addRule: 'Ajouter une règle', notesPlaceholder: 'Ajouter des notes pour cette destination…',
     selectDest: 'Sélectionner une destination', back: '← Retour',
     search: 'Rechercher…', filterAll: 'Tous', filterIssues: 'Problèmes', noResults: 'Aucune destination',
-    regions: { 'North America': 'Amérique du Nord', 'Europe': 'Europe', 'Latin America': 'Amérique latine', 'Asia Pacific': 'Asie-Pacifique', 'Middle East': 'Moyen-Orient', 'Suspended': 'Suspendu' },
+    lastChecked: 'Vérifié',
+    regions: { 'North America': 'Amérique du Nord', 'Europe': 'Europe', 'Latin America': 'Amérique latine', 'Asia Pacific': 'Asie-Pacifique', 'Middle East': 'Moyen-Orient', 'Africa': 'Afrique', 'Suspended': 'Suspendu' },
     sc: {
       ok:   { label: 'OK',        pillLabel: 'Opérationnel' },
       warn: { label: 'Attention', pillLabel: 'À vérifier avant' },
@@ -91,16 +95,17 @@ const SC_CSS: Record<CarrierStatus, { wrapCls: string; badgeCls: string; pillCls
 
 const REGIONS: Array<{ label: string; ids: string[] }> = [
   { label: 'North America', ids: ['usa', 'canada', 'mexico'] },
-  { label: 'Europe',        ids: ['uk', 'germany', 'france', 'spain', 'italy', 'benelux', 'sweden', 'norway', 'denmark', 'finland'] },
-  { label: 'Latin America', ids: ['brazil', 'latam'] },
-  { label: 'Asia Pacific',  ids: ['australia', 'newzealand', 'china', 'hongkong', 'korea', 'taiwan', 'singapore', 'malaysia', 'thailand', 'vietnam', 'philippines', 'indonesia', 'india', 'apac'] },
+  { label: 'Europe',        ids: ['uk', 'germany', 'france', 'spain', 'italy', 'belgium', 'netherlands', 'sweden', 'norway', 'denmark', 'finland', 'poland', 'turkey'] },
+  { label: 'Latin America', ids: ['brazil', 'chile', 'colombia', 'argentina', 'latam'] },
+  { label: 'Asia Pacific',  ids: ['australia', 'newzealand', 'china', 'hongkong', 'korea', 'taiwan', 'singapore', 'malaysia', 'thailand', 'vietnam', 'philippines', 'indonesia', 'india', 'pakistan', 'bangladesh', 'apac'] },
   { label: 'Middle East',   ids: ['israel', 'uae', 'saudi', 'qatar', 'kuwait', 'jordan', 'oman', 'bahrain', 'lebanon', 'iraq', 'yemen', 'syria'] },
+  { label: 'Africa',        ids: ['southafrica', 'egypt'] },
   { label: 'Suspended',     ids: ['russia'] },
 ];
 
 const INITIAL_DATA: Record<string, DestData> = {
   usa: {
-    flagCode: 'us', name: 'USA', region: 'North America',
+    flagCode: 'us', name: 'USA', region: 'North America', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'Limited resumption April 2026 — verify per item type.' },
       { name: 'FedEx',      s: 'warn', note: 'DDP only — confirm terms before booking.' },
@@ -111,7 +116,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Japan Post availability to the US is inconsistent. Default to UPS or DHL unless JP is confirmed.',
   },
   canada: {
-    flagCode: 'ca', name: 'Canada', region: 'North America',
+    flagCode: 'ca', name: 'Canada', region: 'North America', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -122,7 +127,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   mexico: {
-    flagCode: 'mx', name: 'Mexico', region: 'North America',
+    flagCode: 'mx', name: 'Mexico', region: 'North America', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — RFC or CURP required.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational — RFC or CURP required.' },
@@ -133,7 +138,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Mexico is a high-volume destination. Collect RFC or CURP at checkout to avoid delays.',
   },
   uk: {
-    flagCode: 'gb', name: 'UK', region: 'Europe',
+    flagCode: 'gb', name: 'UK', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -144,7 +149,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   germany: {
-    flagCode: 'de', name: 'Germany', region: 'Europe',
+    flagCode: 'de', name: 'Germany', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -155,7 +160,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   france: {
-    flagCode: 'fr', name: 'France', region: 'Europe',
+    flagCode: 'fr', name: 'France', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -166,7 +171,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   spain: {
-    flagCode: 'es', name: 'Spain', region: 'Europe',
+    flagCode: 'es', name: 'Spain', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -177,7 +182,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Japan Post confirmed operational as of April 2026. Previously appeared on suspension lists — monitor JP advisory for changes.',
   },
   italy: {
-    flagCode: 'it', name: 'Italy', region: 'Europe',
+    flagCode: 'it', name: 'Italy', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -187,8 +192,19 @@ const INITIAL_DATA: Record<string, DestData> = {
     rules: ['Codice Fiscale may be required for some shipments', 'IOSS number required for B2C orders under €150'],
     notes: 'Japan Post confirmed operational as of April 2026. Previously appeared on suspension lists — monitor JP advisory for changes.',
   },
-  benelux: {
-    flagCode: 'be', name: 'Belgium / Netherlands', region: 'Europe',
+  belgium: {
+    flagCode: 'be', name: 'Belgium', region: 'Europe', lastChecked: 'Apr 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational.' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
+    notes: '',
+  },
+  netherlands: {
+    flagCode: 'nl', name: 'Netherlands', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -199,7 +215,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   sweden: {
-    flagCode: 'se', name: 'Sweden', region: 'Europe',
+    flagCode: 'se', name: 'Sweden', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -210,7 +226,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   norway: {
-    flagCode: 'no', name: 'Norway', region: 'Europe — non-EU',
+    flagCode: 'no', name: 'Norway', region: 'Europe — non-EU', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -221,7 +237,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Norway processes customs independently. Do not apply EU IOSS to Norwegian orders.',
   },
   denmark: {
-    flagCode: 'dk', name: 'Denmark', region: 'Europe',
+    flagCode: 'dk', name: 'Denmark', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -232,7 +248,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   finland: {
-    flagCode: 'fi', name: 'Finland', region: 'Europe',
+    flagCode: 'fi', name: 'Finland', region: 'Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -242,8 +258,30 @@ const INITIAL_DATA: Record<string, DestData> = {
     rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
     notes: '',
   },
+  poland: {
+    flagCode: 'pl', name: 'Poland', region: 'Europe', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational.' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments', 'Customs processing can be slower than Western Europe — allow extra lead time'],
+    notes: '',
+  },
+  turkey: {
+    flagCode: 'tr', name: 'Turkey', region: 'Europe — non-EU', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational.' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['Turkey is outside the EU — IOSS does not apply', 'Turkish tax ID (Vergi Kimlik Numarası) required for commercial shipments', 'High duty rates on many product categories — verify HS code before shipping', 'Declare full value — Turkish customs compares against market prices'],
+    notes: 'Turkish customs is strict. Confirm import duties for the specific product category before booking. Commercial shipments require recipient tax ID.',
+  },
   brazil: {
-    flagCode: 'br', name: 'Brazil', region: 'Latin America',
+    flagCode: 'br', name: 'Brazil', region: 'Latin America', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — CPF or CNPJ required.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational — CPF or CNPJ required.' },
@@ -253,8 +291,41 @@ const INITIAL_DATA: Record<string, DestData> = {
     rules: ['CPF required for individual recipients (11 digits)', 'CNPJ required for company recipients (14 digits)', 'Missing tax ID causes customs hold or return — collect at order time'],
     notes: 'Validate CPF/CNPJ format before submitting. Invalid numbers cause automatic rejection.',
   },
+  chile: {
+    flagCode: 'cl', name: 'Chile', region: 'Latin America', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational.' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['RUT (Rol Único Tributario) required for commercial shipments', 'Goods over USD 30 subject to Chilean customs duties and IVA', 'Declare full value on all shipments'],
+    notes: '',
+  },
+  colombia: {
+    flagCode: 'co', name: 'Colombia', region: 'Latin America', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational.' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['NIT required for commercial (company) recipients', 'Cédula de Ciudadanía required for individual recipients', 'Goods subject to Colombian import duty and VAT — rate varies by HS code'],
+    notes: 'Collect recipient tax ID at order time to avoid customs holds.',
+  },
+  argentina: {
+    flagCode: 'ar', name: 'Argentina', region: 'Latin America', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'warn', note: 'Verify acceptance before booking — service availability fluctuates.' },
+      { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
+      { name: 'UPS',        s: 'ok',   note: 'Operational.' },
+      { name: 'DHL',        s: 'ok',   note: 'Operational.' },
+    ],
+    rules: ['CUIT required for company recipients; CUIL for individuals', 'Strict import controls — some categories require import permits', 'High import duties apply on many goods', 'Declare full value — undervaluation is aggressively audited'],
+    notes: 'Argentina customs is complex with high duty rates and potential import restrictions. Verify shipment eligibility per product category before booking.',
+  },
   latam: {
-    flagCode: null, name: 'Latin America (other)', region: 'Latin America — excl. Brazil & Mexico',
+    flagCode: null, name: 'Latin America (other)', region: 'Latin America — excl. listed',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — verify per country.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -262,10 +333,11 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
     rules: ['Check Japan Post advisory per country before booking', 'Some countries may require importer tax ID — confirm with carrier'],
-    notes: 'Brazil and Mexico are listed separately due to mandatory tax ID requirements.',
+    notes: 'Brazil, Mexico, Chile, Colombia, and Argentina are listed separately. Use this entry for all other Latin American destinations.',
+    lastChecked: 'Apr 2026',
   },
   australia: {
-    flagCode: 'au', name: 'Australia', region: 'Asia Pacific',
+    flagCode: 'au', name: 'Australia', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -276,7 +348,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   china: {
-    flagCode: 'cn', name: 'China', region: 'Asia Pacific',
+    flagCode: 'cn', name: 'China', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — all services confirmed (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
@@ -287,7 +359,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'China customs regulations change frequently. Confirm current requirements per shipment category.',
   },
   korea: {
-    flagCode: 'kr', name: 'South Korea', region: 'Asia Pacific',
+    flagCode: 'kr', name: 'South Korea', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -298,7 +370,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   taiwan: {
-    flagCode: 'tw', name: 'Taiwan', region: 'Asia Pacific',
+    flagCode: 'tw', name: 'Taiwan', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -309,7 +381,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   singapore: {
-    flagCode: 'sg', name: 'Singapore', region: 'Asia Pacific',
+    flagCode: 'sg', name: 'Singapore', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational.' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -320,7 +392,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   newzealand: {
-    flagCode: 'nz', name: 'New Zealand', region: 'Asia Pacific',
+    flagCode: 'nz', name: 'New Zealand', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -331,7 +403,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   hongkong: {
-    flagCode: 'hk', name: 'Hong Kong', region: 'Asia Pacific',
+    flagCode: 'hk', name: 'Hong Kong', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -342,7 +414,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   malaysia: {
-    flagCode: 'my', name: 'Malaysia', region: 'Asia Pacific',
+    flagCode: 'my', name: 'Malaysia', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -353,7 +425,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   thailand: {
-    flagCode: 'th', name: 'Thailand', region: 'Asia Pacific',
+    flagCode: 'th', name: 'Thailand', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -364,7 +436,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   vietnam: {
-    flagCode: 'vn', name: 'Vietnam', region: 'Asia Pacific',
+    flagCode: 'vn', name: 'Vietnam', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -375,7 +447,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   philippines: {
-    flagCode: 'ph', name: 'Philippines', region: 'Asia Pacific',
+    flagCode: 'ph', name: 'Philippines', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -386,7 +458,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   indonesia: {
-    flagCode: 'id', name: 'Indonesia', region: 'Asia Pacific',
+    flagCode: 'id', name: 'Indonesia', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -397,7 +469,7 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Indonesia customs is among the most complex in APAC. Confirm import permit requirements for the specific product category before shipping.',
   },
   india: {
-    flagCode: 'in', name: 'India', region: 'Asia Pacific',
+    flagCode: 'in', name: 'India', region: 'Asia Pacific', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'ok', note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'ok', note: 'Operational.' },
@@ -407,8 +479,30 @@ const INITIAL_DATA: Record<string, DestData> = {
     rules: ['Import duty applies to most goods — rate varies by HS code', 'Electronics, supplements, and cosmetics may require BIS or FSSAI import licence', 'Recipient PAN or IEC number required for commercial shipments', 'Declare full value — undervaluation is aggressively flagged by Indian customs'],
     notes: 'Indian customs compliance requirements are complex and product-category specific. Verify applicable import regulations with the carrier before booking.',
   },
+  pakistan: {
+    flagCode: 'pk', name: 'Pakistan', region: 'Asia Pacific', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'warn', note: 'Verify service availability per item type before booking.' },
+      { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
+      { name: 'UPS',        s: 'q',    note: 'Monitor — verify before booking.' },
+      { name: 'DHL',        s: 'ok',   note: 'Operational.' },
+    ],
+    rules: ['Commercial goods require import permit and customs clearance', 'Restricted product categories — verify eligibility before shipping', 'Declare full value on all shipments', 'Customs clearance can be slow — allow extra lead time'],
+    notes: 'FedEx and DHL are the most reliable options. Verify Japan Post and UPS acceptance before booking.',
+  },
+  bangladesh: {
+    flagCode: 'bd', name: 'Bangladesh', region: 'Asia Pacific', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — verify per item type.' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'q',  note: 'Monitor — verify before booking.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['High import duty rates on many product categories', 'Commercial shipments require detailed commercial invoice and packing list', 'Some goods require import licence — verify before shipping', 'Declare full value on all shipments'],
+    notes: 'DHL and FedEx are preferred carriers. Verify UPS acceptance before booking.',
+  },
   apac: {
-    flagCode: null, name: 'Asia Pacific (other)', region: 'Asia Pacific — excl. listed',
+    flagCode: null, name: 'Asia Pacific (other)', region: 'Asia Pacific — excl. listed', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'Partial — check JP advisory per country.' },
       { name: 'FedEx',      s: 'q',    note: 'Monitoring — verify before booking.' },
@@ -419,7 +513,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'Status changes frequently. Check carrier advisory pages before booking.',
   },
   israel: {
-    flagCode: 'il', name: 'Israel', region: 'Middle East',
+    flagCode: 'il', name: 'Israel', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 485/vol.kg',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'International Priority (IP) only. Demand surcharge: JPY 485/vol. kg (eff. Mar 5, 2026).' },
@@ -434,7 +529,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'DHL and FedEx available with surcharges from March 2026. FedEx limited to International Priority only. UPS suspended.',
   },
   uae: {
-    flagCode: 'ae', name: 'UAE', region: 'Middle East',
+    flagCode: 'ae', name: 'UAE', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg · FedEx Dubai hub offline',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -449,7 +545,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'DHL is the recommended carrier. FedEx technically available but experiencing extreme delays due to Dubai hub disruption. Japan Post and UPS suspended.',
   },
   saudi: {
-    flagCode: 'sa', name: 'Saudi Arabia', region: 'Middle East',
+    flagCode: 'sa', name: 'Saudi Arabia', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg · FedEx Dubai hub offline',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -464,7 +561,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'DHL recommended. FedEx available but extreme delays due to Dubai hub. Japan Post and UPS suspended.',
   },
   qatar: {
-    flagCode: 'qa', name: 'Qatar', region: 'Middle East',
+    flagCode: 'qa', name: 'Qatar', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg · FedEx Dubai hub offline',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -479,7 +577,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   kuwait: {
-    flagCode: 'kw', name: 'Kuwait', region: 'Middle East',
+    flagCode: 'kw', name: 'Kuwait', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg · FedEx Dubai hub offline',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -494,7 +593,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   jordan: {
-    flagCode: 'jo', name: 'Jordan', region: 'Middle East',
+    flagCode: 'jo', name: 'Jordan', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg · FedEx Dubai hub offline',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -509,7 +609,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   oman: {
-    flagCode: 'om', name: 'Oman', region: 'Middle East',
+    flagCode: 'om', name: 'Oman', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg · FedEx Dubai hub offline',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — all services available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -524,7 +625,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   bahrain: {
-    flagCode: 'bh', name: 'Bahrain', region: 'Middle East',
+    flagCode: 'bh', name: 'Bahrain', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg · FedEx Dubai hub offline',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -539,7 +641,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   lebanon: {
-    flagCode: 'lb', name: 'Lebanon', region: 'Middle East',
+    flagCode: 'lb', name: 'Lebanon', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg · FedEx Dubai hub offline',
     carriers: [
       { name: 'Japan Post', s: 'ok',   note: 'Operational — Air, EMS, Parcels available (confirmed Apr 2026).' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Avoid for urgent shipments. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -554,7 +657,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: '',
   },
   iraq: {
-    flagCode: 'iq', name: 'Iraq', region: 'Middle East',
+    flagCode: 'iq', name: 'Iraq', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill + Restricted Destination Fee · FedEx: JPY 226/vol.kg',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'Listed as operational on JP advisory (Apr 2026) — verify acceptance before booking.' },
       { name: 'FedEx',      s: 'warn', note: 'Extreme delays — Dubai hub offline. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
@@ -569,7 +673,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'DHL operates with an additional Restricted Destination Fee on top of the standard surcharge. Verify total fees with DHL before booking.',
   },
   yemen: {
-    flagCode: 'ye', name: 'Yemen', region: 'Middle East',
+    flagCode: 'ye', name: 'Yemen', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill + Restricted Destination Fee · FedEx unavailable',
     carriers: [
       { name: 'Japan Post', s: 'no', note: 'Service suspended.' },
       { name: 'FedEx',      s: 'no', note: 'Service unavailable / unconfirmed — do not book.' },
@@ -584,7 +689,8 @@ const INITIAL_DATA: Record<string, DestData> = {
     notes: 'FedEx unavailable. DHL available with restricted destination surcharge — confirm explicitly before booking.',
   },
   syria: {
-    flagCode: 'sy', name: 'Syria', region: 'Middle East',
+    flagCode: 'sy', name: 'Syria', region: 'Middle East', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx unavailable',
     carriers: [
       { name: 'Japan Post', s: 'no', note: 'Service suspended.' },
       { name: 'FedEx',      s: 'no', note: 'Service unavailable / unconfirmed — do not book.' },
@@ -598,8 +704,30 @@ const INITIAL_DATA: Record<string, DestData> = {
     ],
     notes: 'FedEx unavailable. DHL available with standard Middle East surcharge.',
   },
+  southafrica: {
+    flagCode: 'za', name: 'South Africa', region: 'Africa', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'ok', note: 'Operational — verify per service type.' },
+      { name: 'FedEx',      s: 'ok', note: 'Operational.' },
+      { name: 'UPS',        s: 'ok', note: 'Operational.' },
+      { name: 'DHL',        s: 'ok', note: 'Operational.' },
+    ],
+    rules: ['Goods over ZAR 500 subject to VAT; over ZAR 1,000 subject to customs duty', 'SARS clearance required for commercial shipments', 'Declare full value on all shipments', 'Some product categories require permits — verify before shipping'],
+    notes: '',
+  },
+  egypt: {
+    flagCode: 'eg', name: 'Egypt', region: 'Africa', lastChecked: 'May 2026',
+    carriers: [
+      { name: 'Japan Post', s: 'warn', note: 'Delays reported — verify before booking.' },
+      { name: 'FedEx',      s: 'ok',   note: 'Operational.' },
+      { name: 'UPS',        s: 'ok',   note: 'Operational.' },
+      { name: 'DHL',        s: 'ok',   note: 'Operational.' },
+    ],
+    rules: ['Detailed commercial invoice required for all shipments', 'Egypt customs is strict — some categories require import licence', 'High duty rates on many product categories', 'Declare full value on all shipments'],
+    notes: 'Japan Post may experience delays. Use courier for reliable delivery.',
+  },
   russia: {
-    flagCode: 'ru', name: 'Russia / Belarus', region: 'Eastern Europe',
+    flagCode: 'ru', name: 'Russia / Belarus', region: 'Eastern Europe', lastChecked: 'Apr 2026',
     carriers: [
       { name: 'Japan Post', s: 'warn', note: 'JP advisory lists service as available (Apr 2026) — verify export compliance and sanctions before booking.' },
       { name: 'FedEx',      s: 'no',   note: 'Suspended indefinitely.' },
@@ -737,10 +865,20 @@ function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onA
         </span>
         <div>
           <div className="dest-name">{dest.name}</div>
-          <div className="dest-region-sub">{dest.region}</div>
+          <div className="dest-region-sub">
+            {dest.region}
+            {dest.lastChecked && <span className="dest-verified"> · {t.lastChecked} {dest.lastChecked}</span>}
+          </div>
         </div>
         <span className={`overall-pill ${SC_CSS[ov].pillCls}`}>{t.sc[ov].pillLabel}</span>
       </div>
+
+      {dest.surcharge && (
+        <div className="surcharge-alert">
+          <span aria-hidden="true">⚠</span>
+          <span>{dest.surcharge}</span>
+        </div>
+      )}
 
       <div className="sec-block">
         <div className="sec-head">
@@ -848,15 +986,18 @@ function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onA
 // ── Main dashboard ────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const [data, setData] = useState<Record<string, DestData>>(() => {
-    try {
-      const saved = localStorage.getItem('japan-shipping-data');
-      if (saved) return { ...INITIAL_DATA, ...JSON.parse(saved) };
-    } catch {}
-    return INITIAL_DATA;
-  });
+  const [data, setData] = useState<Record<string, DestData>>(INITIAL_DATA);
+  const skipSaveRef = useRef(true);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem('japan-shipping-data');
+      if (saved) setData({ ...INITIAL_DATA, ...JSON.parse(saved) });
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (skipSaveRef.current) { skipSaveRef.current = false; return; }
     try { localStorage.setItem('japan-shipping-data', JSON.stringify(data)); } catch {}
   }, [data]);
   const [currentId, setCurrentId] = useState<string | null>(null);
