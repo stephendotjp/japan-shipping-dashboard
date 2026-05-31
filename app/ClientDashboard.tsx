@@ -11,7 +11,7 @@ interface DestData { flagCode: string | null; name: string; region: string; carr
 // ── Translations ──────────────────────────────────────────────────
 
 interface Translation {
-  title: string; subtitle: string; updated: string;
+  title: string; subtitle: string;
   carrierStatus: string; clickToChange: string;
   countryRules: string; clickToEdit: string;
   notes: string; clickNotesToEdit: string;
@@ -27,7 +27,6 @@ interface Translation {
 const TRANSLATIONS: Record<Lang, Translation> = {
   en: {
     title: 'Japan shipping ops', subtitle: 'Carrier & destination guide',
-    updated: 'Updated May 27, 2026',
     carrierStatus: 'Carrier status', clickToChange: 'Click status to change',
     countryRules: 'Country rules', clickToEdit: 'Click any rule to edit',
     notes: 'Notes', clickNotesToEdit: 'Click to edit',
@@ -46,7 +45,6 @@ const TRANSLATIONS: Record<Lang, Translation> = {
   },
   ja: {
     title: '日本発送オペレーション', subtitle: '配送業者・配送先ガイド',
-    updated: '2026年5月27日 更新',
     carrierStatus: '配送業者ステータス', clickToChange: 'クリックして変更',
     countryRules: '国別ルール', clickToEdit: 'クリックして編集',
     notes: 'メモ', clickNotesToEdit: 'クリックして編集',
@@ -65,7 +63,6 @@ const TRANSLATIONS: Record<Lang, Translation> = {
   },
   fr: {
     title: 'Ops expédition Japon', subtitle: 'Guide transporteur & destination',
-    updated: 'Mis à jour le 27 mai 2026',
     carrierStatus: 'Statut transporteur', clickToChange: 'Cliquer pour modifier',
     countryRules: 'Règles par pays', clickToEdit: 'Cliquer pour modifier',
     notes: 'Notes', clickNotesToEdit: 'Cliquer pour modifier',
@@ -84,7 +81,6 @@ const TRANSLATIONS: Record<Lang, Translation> = {
   },
   it: {
     title: 'Operazioni spedizioni Giappone', subtitle: 'Guida vettori e destinazioni',
-    updated: 'Aggiornato il 27 maggio 2026',
     carrierStatus: 'Stato vettore', clickToChange: 'Clicca per cambiare',
     countryRules: 'Regole per paese', clickToEdit: 'Clicca per modificare',
     notes: 'Note', clickNotesToEdit: 'Clicca per modificare',
@@ -103,7 +99,6 @@ const TRANSLATIONS: Record<Lang, Translation> = {
   },
   fil: {
     title: 'Japan shipping ops', subtitle: 'Gabay sa carrier at destinasyon',
-    updated: 'Na-update Mayo 27, 2026',
     carrierStatus: 'Status ng carrier', clickToChange: 'I-click para baguhin',
     countryRules: 'Mga patakaran sa bansa', clickToEdit: 'I-click para i-edit',
     notes: 'Mga tala', clickNotesToEdit: 'I-click para i-edit',
@@ -1060,10 +1055,30 @@ function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onA
   );
 }
 
+// ── Last-edited formatter ─────────────────────────────────────────
+
+const LOCALE_MAP: Record<Lang, string> = { en: 'en-US', ja: 'ja-JP', fr: 'fr-FR', it: 'it-IT', fil: 'en-PH' };
+const UPDATED_PREFIX: Record<Lang, (d: string) => string> = {
+  en:  d => `Updated ${d}`,
+  ja:  d => `${d} 更新`,
+  fr:  d => `Mis à jour le ${d}`,
+  it:  d => `Aggiornato il ${d}`,
+  fil: d => `Na-update ${d}`,
+};
+
+function formatLastEdited(iso: string | null, lang: Lang): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  const formatted = new Intl.DateTimeFormat(LOCALE_MAP[lang], { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
+  return UPDATED_PREFIX[lang](formatted);
+}
+
 // ── Main dashboard ────────────────────────────────────────────────
 
 export default function Dashboard() {
   const [data, setData] = useState<Record<string, DestData>>(INITIAL_DATA);
+  const [lastEdited, setLastEdited] = useState<string | null>(null);
+  const lastEditedRef = useRef<string | null>(null);
   const skipSaveRef = useRef(true);
   const kvTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1072,8 +1087,11 @@ export default function Dashboard() {
       try {
         const res = await fetch('/api/dashboard');
         if (res.ok) {
-          const saved = await res.json();
+          const payload = await res.json();
+          const { data: saved, lastEdited: savedTime } = payload as { data?: Record<string, DestData>; lastEdited?: string };
           if (saved && Object.keys(saved).length > 0) {
+            lastEditedRef.current = savedTime ?? null;
+            setLastEdited(savedTime ?? null);
             setData({ ...INITIAL_DATA, ...saved });
             return;
           }
@@ -1082,7 +1100,12 @@ export default function Dashboard() {
       // Fall back to localStorage if KV is unavailable
       try {
         const saved = localStorage.getItem('japan-shipping-data');
-        if (saved) setData({ ...INITIAL_DATA, ...JSON.parse(saved) });
+        const savedTime = localStorage.getItem('japan-shipping-lastEdited');
+        if (saved) {
+          lastEditedRef.current = savedTime;
+          setLastEdited(savedTime);
+          setData({ ...INITIAL_DATA, ...JSON.parse(saved) });
+        }
       } catch {}
     }
     load();
@@ -1090,13 +1113,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (skipSaveRef.current) { skipSaveRef.current = false; return; }
+    const le = lastEditedRef.current;
     try { localStorage.setItem('japan-shipping-data', JSON.stringify(data)); } catch {}
+    if (le) try { localStorage.setItem('japan-shipping-lastEdited', le); } catch {}
     if (kvTimerRef.current) clearTimeout(kvTimerRef.current);
     kvTimerRef.current = setTimeout(() => {
       fetch('/api/dashboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ data, lastEdited: le }),
       }).catch(() => {});
     }, 2000);
   }, [data]);
@@ -1131,6 +1156,9 @@ export default function Dashboard() {
   })).filter(region => region.ids.length > 0);
 
   function patch(id: string, fn: (d: DestData) => DestData) {
+    const now = new Date().toISOString();
+    lastEditedRef.current = now;
+    setLastEdited(now);
     setData(prev => ({ ...prev, [id]: fn(prev[id]) }));
   }
 
@@ -1176,7 +1204,7 @@ export default function Dashboard() {
           <div className="hdr-sub">{t.subtitle}</div>
         </div>
         <div className="hdr-right">
-          <div className="updated">{t.updated}</div>
+          {lastEdited && <div className="updated">{formatLastEdited(lastEdited, lang)}</div>}
           <div className="font-toggle">
             <button className={`font-btn${fontSize === 'normal' ? ' active' : ''}`} onClick={() => setFontSize('normal')} aria-label="Normal text size">A</button>
             <button className={`font-btn${fontSize === 'large' ? ' active' : ''}`} onClick={() => setFontSize('large')} aria-label="Large text size">A+</button>

@@ -6,8 +6,8 @@ export const dynamic = 'force-dynamic';
 const KEY = 'dashboard:data';
 
 export async function GET() {
-  const data = await kv.get<object>(KEY) ?? {};
-  return NextResponse.json(data);
+  const payload = await kv.get<{ data: object; lastEdited: string | null }>(KEY) ?? {};
+  return NextResponse.json(payload);
 }
 
 export async function POST(req: Request) {
