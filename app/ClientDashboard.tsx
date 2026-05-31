@@ -1086,6 +1086,33 @@ function formatLastEdited(iso: string | null, lang: Lang): string {
   return UPDATED_PREFIX[lang](formatted);
 }
 
+// Only save fields the user actually changed — INITIAL_DATA flows through for everything else.
+// _v:2 marks the new format; old snapshots (no _v) are discarded so code updates always show.
+function applyOverrides(overrides: Record<string, Partial<DestData>>): Record<string, DestData> {
+  const result: Record<string, DestData> = {};
+  for (const [id, base] of Object.entries(INITIAL_DATA)) {
+    const ov = overrides[id];
+    result[id] = ov ? { ...base, ...ov } : { ...base };
+  }
+  return result;
+}
+
+function computeSaveData(data: Record<string, DestData>, lastEdited: string | null): Record<string, unknown> {
+  const save: Record<string, unknown> = { _v: 2 };
+  if (lastEdited) save._lastEdited = lastEdited;
+  for (const [id, d] of Object.entries(data)) {
+    const base = INITIAL_DATA[id];
+    if (!base) continue;
+    const ov: Partial<DestData> = {};
+    if (d.statusOverride !== undefined) ov.statusOverride = d.statusOverride;
+    if (JSON.stringify(d.carriers) !== JSON.stringify(base.carriers)) ov.carriers = d.carriers;
+    if (JSON.stringify(d.rules) !== JSON.stringify(base.rules)) ov.rules = d.rules;
+    if (d.notes !== base.notes) ov.notes = d.notes;
+    if (Object.keys(ov).length > 0) save[id] = ov;
+  }
+  return save;
+}
+
 // ── Main dashboard ────────────────────────────────────────────────
 
 export default function Dashboard() {
@@ -1097,28 +1124,27 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function load() {
+      function applyPayload(payload: Record<string, unknown>) {
+        if (payload._v !== 2) return false; // old full-snapshot format — discard
+        const { _v: _ignored, _lastEdited, ...overrides } = payload;
+        if (typeof _lastEdited === 'string') {
+          lastEditedRef.current = _lastEdited;
+          setLastEdited(_lastEdited);
+        }
+        setData(applyOverrides(overrides as Record<string, Partial<DestData>>));
+        return true;
+      }
       try {
         const res = await fetch('/api/dashboard');
         if (res.ok) {
           const payload = await res.json();
-          const { data: saved, lastEdited: savedTime } = payload as { data?: Record<string, DestData>; lastEdited?: string };
-          if (saved && Object.keys(saved).length > 0) {
-            lastEditedRef.current = savedTime ?? null;
-            setLastEdited(savedTime ?? null);
-            setData({ ...INITIAL_DATA, ...saved });
-            return;
-          }
+          if (applyPayload(payload)) return;
         }
       } catch {}
       // Fall back to localStorage if KV is unavailable
       try {
-        const saved = localStorage.getItem('japan-shipping-data');
-        const savedTime = localStorage.getItem('japan-shipping-lastEdited');
-        if (saved) {
-          lastEditedRef.current = savedTime;
-          setLastEdited(savedTime);
-          setData({ ...INITIAL_DATA, ...JSON.parse(saved) });
-        }
+        const raw = localStorage.getItem('japan-shipping-data');
+        if (raw) applyPayload(JSON.parse(raw));
       } catch {}
     }
     load();
@@ -1126,15 +1152,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (skipSaveRef.current) { skipSaveRef.current = false; return; }
-    const le = lastEditedRef.current;
-    try { localStorage.setItem('japan-shipping-data', JSON.stringify(data)); } catch {}
-    if (le) try { localStorage.setItem('japan-shipping-lastEdited', le); } catch {}
+    const saveData = computeSaveData(data, lastEditedRef.current);
+    try { localStorage.setItem('japan-shipping-data', JSON.stringify(saveData)); } catch {}
     if (kvTimerRef.current) clearTimeout(kvTimerRef.current);
     kvTimerRef.current = setTimeout(() => {
       fetch('/api/dashboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data, lastEdited: le }),
+        body: JSON.stringify(saveData),
       }).catch(() => {});
     }, 2000);
   }, [data]);
