@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-type Lang = 'en' | 'ja' | 'fr';
+type Lang = 'en' | 'ja' | 'fr' | 'it' | 'fil';
 type CarrierStatus = 'ok' | 'warn' | 'no' | 'q';
 
 interface Carrier { name: string; s: CarrierStatus; note: string; }
@@ -81,6 +81,44 @@ const TRANSLATIONS: Record<Lang, Translation> = {
       q:    { label: 'Surveiller', pillLabel: 'Surveiller' },
     },
     options: { ok: 'OK', warn: 'Attention', no: 'Suspendu', q: 'Surveiller' },
+  },
+  it: {
+    title: 'Operazioni spedizioni Giappone', subtitle: 'Guida vettori e destinazioni',
+    updated: 'Aggiornato il 27 maggio 2026',
+    carrierStatus: 'Stato vettore', clickToChange: 'Clicca per cambiare',
+    countryRules: 'Regole per paese', clickToEdit: 'Clicca per modificare',
+    notes: 'Note', clickNotesToEdit: 'Clicca per modificare',
+    addRule: 'Aggiungi regola', notesPlaceholder: 'Aggiungi note per questa destinazione…',
+    selectDest: 'Seleziona una destinazione', back: '← Indietro',
+    search: 'Cerca destinazioni…', filterAll: 'Tutte', filterIssues: 'Solo problemi', noResults: 'Nessuna destinazione trovata',
+    lastChecked: 'Verificato',
+    regions: { 'North America': 'Nord America', 'Europe': 'Europa', 'Latin America': 'America Latina', 'Asia Pacific': 'Asia Pacifico', 'Middle East': 'Medio Oriente', 'Africa': 'Africa', 'Suspended': 'Sospeso' },
+    sc: {
+      ok:   { label: 'OK',        pillLabel: 'Operativo' },
+      warn: { label: 'Attenzione', pillLabel: 'Verificare prima' },
+      no:   { label: 'Sospeso',   pillLabel: 'Non spedire' },
+      q:    { label: 'Monitorare', pillLabel: 'Monitorare' },
+    },
+    options: { ok: 'OK', warn: 'Attenzione', no: 'Sospeso', q: 'Monitorare' },
+  },
+  fil: {
+    title: 'Japan shipping ops', subtitle: 'Gabay sa carrier at destinasyon',
+    updated: 'Na-update Mayo 27, 2026',
+    carrierStatus: 'Status ng carrier', clickToChange: 'I-click para baguhin',
+    countryRules: 'Mga patakaran sa bansa', clickToEdit: 'I-click para i-edit',
+    notes: 'Mga tala', clickNotesToEdit: 'I-click para i-edit',
+    addRule: 'Magdagdag ng panuntunan', notesPlaceholder: 'Magdagdag ng tala para sa destinasyong ito…',
+    selectDest: 'Pumili ng destinasyon', back: '← Bumalik',
+    search: 'Maghanap ng destinasyon…', filterAll: 'Lahat', filterIssues: 'May problema', noResults: 'Walang katugmang destinasyon',
+    lastChecked: 'Napatunayan',
+    regions: { 'North America': 'Hilagang Amerika', 'Europe': 'Europa', 'Latin America': 'Latin Amerika', 'Asia Pacific': 'Asia Pasipiko', 'Middle East': 'Gitnang Silangan', 'Africa': 'Aprika', 'Suspended': 'Nasuspinde' },
+    sc: {
+      ok:   { label: 'OK',        pillLabel: 'Gumagana' },
+      warn: { label: 'Babala',    pillLabel: 'Suriin bago mag-book' },
+      no:   { label: 'Nasuspinde', pillLabel: 'Huwag magpadala' },
+      q:    { label: 'Bantayan',  pillLabel: 'Bantayan' },
+    },
+    options: { ok: 'OK', warn: 'Babala', no: 'Nasuspinde', q: 'Bantayan' },
   },
 };
 
@@ -1121,13 +1159,13 @@ export default function Dashboard() {
             <button className={`font-btn${fontSize === 'large' ? ' active' : ''}`} onClick={() => setFontSize('large')} aria-label="Large text size">A+</button>
           </div>
           <div className="lang-toggle">
-            {(['en', 'ja', 'fr'] as Lang[]).map(l => (
+            {(['en', 'ja', 'fr', 'it', 'fil'] as Lang[]).map(l => (
               <button
                 key={l}
                 className={`lang-btn${lang === l ? ' active' : ''}`}
                 onClick={() => setLang(l)}
               >
-                {l === 'en' ? 'EN' : l === 'ja' ? '日本語' : 'FR'}
+                {l === 'en' ? 'EN' : l === 'ja' ? '日本語' : l === 'fr' ? 'FR' : l === 'it' ? 'IT' : 'FIL'}
               </button>
             ))}
           </div>
