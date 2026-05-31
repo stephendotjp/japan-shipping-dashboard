@@ -98,7 +98,7 @@ const REGIONS: Array<{ label: string; ids: string[] }> = [
   { label: 'Europe',        ids: ['uk', 'germany', 'france', 'spain', 'italy', 'belgium', 'netherlands', 'sweden', 'norway', 'denmark', 'finland', 'poland', 'turkey'] },
   { label: 'Latin America', ids: ['brazil', 'chile', 'colombia', 'argentina', 'latam'] },
   { label: 'Asia Pacific',  ids: ['australia', 'newzealand', 'china', 'hongkong', 'korea', 'taiwan', 'singapore', 'malaysia', 'thailand', 'vietnam', 'philippines', 'indonesia', 'india', 'pakistan', 'bangladesh', 'apac'] },
-  { label: 'Middle East',   ids: ['israel', 'uae', 'saudi', 'qatar', 'kuwait', 'jordan', 'oman', 'bahrain', 'lebanon', 'iraq', 'yemen', 'syria'] },
+  { label: 'Middle East',   ids: ['israel', 'uae', 'mideast_other'] },
   { label: 'Africa',        ids: ['southafrica', 'egypt'] },
   { label: 'Suspended',     ids: ['russia'] },
 ];
@@ -703,6 +703,25 @@ const INITIAL_DATA: Record<string, DestData> = {
       'Verify DHL acceptance before booking',
     ],
     notes: 'FedEx unavailable. DHL available with standard Middle East surcharge.',
+  },
+  mideast_other: {
+    flagCode: null, name: 'Middle East (other)', region: 'Middle East — excl. Israel & UAE', lastChecked: 'Apr 2026',
+    surcharge: 'DHL: JPY 5,000/waybill · FedEx: JPY 226/vol.kg (where available)',
+    carriers: [
+      { name: 'Japan Post', s: 'warn', note: 'Suspended or limited for most countries — verify per destination before booking.' },
+      { name: 'FedEx',      s: 'warn', note: 'Dubai hub offline — extreme delays. Unavailable for Yemen/Syria. Demand surcharge: JPY 226/vol. kg (eff. Mar 5, 2026).' },
+      { name: 'UPS',        s: 'no',   note: 'Suspended across the region.' },
+      { name: 'DHL',        s: 'warn', note: 'Available for most countries. Surcharge: JPY 5,000 per waybill (eff. March 2026).' },
+    ],
+    rules: [
+      'Covers: Saudi Arabia, Qatar, Kuwait, Jordan, Oman, Bahrain, Lebanon, Iraq, Yemen, Syria',
+      'DHL: JPY 5,000 fixed surcharge per waybill applies region-wide',
+      'FedEx: Dubai hub offline — extreme delays; avoid for urgent shipments',
+      'FedEx unavailable for Yemen and Syria — do not book',
+      'UPS suspended across the region',
+      'Japan Post suspended for most — verify per country before booking',
+    ],
+    notes: 'DHL is the recommended carrier. Verify DHL destination acceptance before booking. FedEx available for some countries but unreliable due to Dubai hub outage.',
   },
   southafrica: {
     flagCode: 'za', name: 'South Africa', region: 'Africa', lastChecked: 'May 2026',
