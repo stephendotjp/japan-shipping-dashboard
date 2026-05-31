@@ -145,7 +145,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: ['FedEx USA: DDP required — never ship DAP', 'Declare full value — undervalue is auto-flagged', 'Japan Post: confirm acceptance per item type before booking'],
+    rules: ['FedEx USA: DDP required — never ship DAP', 'Declare full value — undervalue is auto-flagged', 'Japan Post: confirm acceptance per item type before booking', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'Japan Post availability to the US is inconsistent. Default to UPS or DHL unless JP is confirmed.',
   },
   canada: {
@@ -156,7 +156,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Declare full value on all shipments', 'Goods over CAD $20 subject to duties and taxes'],
+    rules: ['Declare full value on all shipments', 'Goods over CAD $20 subject to duties and taxes', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   mexico: {
@@ -167,7 +167,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational — RFC or CURP required.' },
       { name: 'DHL',        s: 'ok', note: 'Operational — RFC or CURP required.' },
     ],
-    rules: ['RFC required for business recipients (13 chars)', 'CURP required for individual recipients (18 chars)', 'Missing tax ID causes customs hold — collect at checkout', 'All four carriers require tax ID — no exceptions'],
+    rules: ['RFC required for business recipients (13 chars)', 'CURP required for individual recipients (18 chars)', 'Missing tax ID causes customs hold — collect at checkout', 'All four carriers require tax ID — no exceptions', 'Japan Post: max 20 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: 'Mexico is a high-volume destination. Collect RFC or CURP at checkout to avoid delays.',
   },
   uk: {
@@ -178,7 +178,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Full value declaration required.' },
     ],
-    rules: ['Post-Brexit: all shipments require HS commodity codes', 'DHL: full declared value mandatory', 'IOSS number required for B2C orders under £135'],
+    rules: ['Post-Brexit: all shipments require HS commodity codes', 'DHL: full declared value mandatory', 'IOSS number required for B2C orders under £135', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   germany: {
@@ -189,7 +189,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Full declared value required on all carriers', 'IOSS number required for B2C orders under €150', 'Electronics: WEEE registration may be required'],
+    rules: ['Full declared value required on all carriers', 'IOSS number required for B2C orders under €150', 'Electronics: WEEE registration may be required', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: '',
   },
   france: {
@@ -200,7 +200,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: '',
   },
   spain: {
@@ -211,7 +211,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['IOSS number required for B2C orders under €150'],
+    rules: ['IOSS number required for B2C orders under €150', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'Japan Post confirmed operational as of April 2026. Previously appeared on suspension lists — monitor JP advisory for changes.',
   },
   italy: {
@@ -222,7 +222,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Codice Fiscale may be required for some shipments', 'IOSS number required for B2C orders under €150'],
+    rules: ['Codice Fiscale may be required for some shipments', 'IOSS number required for B2C orders under €150', 'Japan Post: max 20 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: 'Japan Post confirmed operational as of April 2026. Previously appeared on suspension lists — monitor JP advisory for changes.',
   },
   belgium: {
@@ -233,7 +233,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail only — no surface mail'],
     notes: '',
   },
   netherlands: {
@@ -244,7 +244,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail only — no surface mail'],
     notes: '',
   },
   sweden: {
@@ -255,7 +255,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['IOSS number required for B2C orders under €150', 'Declare full value — undervalue flagged at customs'],
+    rules: ['IOSS number required for B2C orders under €150', 'Declare full value — undervalue flagged at customs', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: '',
   },
   norway: {
@@ -266,7 +266,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Norway is outside the EU — IOSS does not apply', 'All goods subject to Norwegian customs and VAT', 'Shipments over NOK 350 subject to import duties'],
+    rules: ['Norway is outside the EU — IOSS does not apply', 'All goods subject to Norwegian customs and VAT', 'Shipments over NOK 350 subject to import duties', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: 'Norway processes customs independently. Do not apply EU IOSS to Norwegian orders.',
   },
   denmark: {
@@ -277,7 +277,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: '',
   },
   finland: {
@@ -288,7 +288,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments'],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   poland: {
@@ -299,7 +299,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments', 'Customs processing can be slower than Western Europe — allow extra lead time'],
+    rules: ['IOSS number required for B2C orders under €150', 'Full declared value on all shipments', 'Customs processing can be slower than Western Europe — allow extra lead time', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   turkey: {
@@ -310,7 +310,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Turkey is outside the EU — IOSS does not apply', 'Turkish tax ID (Vergi Kimlik Numarası) required for commercial shipments', 'High duty rates on many product categories — verify HS code before shipping', 'Declare full value — Turkish customs compares against market prices'],
+    rules: ['Turkey is outside the EU — IOSS does not apply', 'Turkish tax ID (Vergi Kimlik Numarası) required for commercial shipments', 'High duty rates on many product categories — verify HS code before shipping', 'Declare full value — Turkish customs compares against market prices', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: 'Turkish customs is strict. Confirm import duties for the specific product category before booking. Commercial shipments require recipient tax ID.',
   },
   brazil: {
@@ -321,7 +321,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational — CPF or CNPJ required.' },
       { name: 'DHL',        s: 'ok', note: 'Operational — CPF or CNPJ required.' },
     ],
-    rules: ['CPF required for individual recipients (11 digits)', 'CNPJ required for company recipients (14 digits)', 'Missing tax ID causes customs hold or return — collect at order time'],
+    rules: ['CPF required for individual recipients (11 digits)', 'CNPJ required for company recipients (14 digits)', 'Missing tax ID causes customs hold or return — collect at order time', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'Validate CPF/CNPJ format before submitting. Invalid numbers cause automatic rejection.',
   },
   chile: {
@@ -332,7 +332,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['RUT (Rol Único Tributario) required for commercial shipments', 'Goods over USD 30 subject to Chilean customs duties and IVA', 'Declare full value on all shipments'],
+    rules: ['RUT (Rol Único Tributario) required for commercial shipments', 'Goods over USD 30 subject to Chilean customs duties and IVA', 'Declare full value on all shipments', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail only — no surface mail'],
     notes: '',
   },
   colombia: {
@@ -343,7 +343,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['NIT required for commercial (company) recipients', 'Cédula de Ciudadanía required for individual recipients', 'Goods subject to Colombian import duty and VAT — rate varies by HS code'],
+    rules: ['NIT required for commercial (company) recipients', 'Cédula de Ciudadanía required for individual recipients', 'Goods subject to Colombian import duty and VAT — rate varies by HS code', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail only — no surface mail'],
     notes: 'Collect recipient tax ID at order time to avoid customs holds.',
   },
   argentina: {
@@ -354,7 +354,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: ['CUIT required for company recipients; CUIL for individuals', 'Strict import controls — some categories require import permits', 'High import duties apply on many goods', 'Declare full value — undervaluation is aggressively audited'],
+    rules: ['CUIT required for company recipients; CUIL for individuals', 'Strict import controls — some categories require import permits', 'High import duties apply on many goods', 'Declare full value — undervaluation is aggressively audited', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'Argentina customs is complex with high duty rates and potential import restrictions. Verify shipment eligibility per product category before booking.',
   },
   latam: {
@@ -365,7 +365,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Check Japan Post advisory per country before booking', 'Some countries may require importer tax ID — confirm with carrier'],
+    rules: ['Check Japan Post advisory per country before booking', 'Some countries may require importer tax ID — confirm with carrier', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'Brazil, Mexico, Chile, Colombia, and Argentina are listed separately. Use this entry for all other Latin American destinations.',
     lastChecked: 'Apr 2026',
   },
@@ -377,7 +377,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Goods over AUD 1,000 subject to import duties and GST', 'Strict biosecurity — never ship food, plants, or animal products'],
+    rules: ['Goods over AUD 1,000 subject to import duties and GST', 'Strict biosecurity — never ship food, plants, or animal products', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: '',
   },
   china: {
@@ -388,7 +388,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: ['Recipient ID number required for customs clearance', 'Restricted categories: cosmetics, supplements, electronics — verify before shipping', 'JP delays common — use courier for time-sensitive orders'],
+    rules: ['Recipient ID number required for customs clearance', 'Restricted categories: cosmetics, supplements, electronics — verify before shipping', 'JP delays common — use courier for time-sensitive orders', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: 'China customs regulations change frequently. Confirm current requirements per shipment category.',
   },
   korea: {
@@ -399,7 +399,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Personal customs clearance ID (PCCC) required for B2C shipments', 'Goods over KRW 150,000 subject to duties'],
+    rules: ['Personal customs clearance ID (PCCC) required for B2C shipments', 'Goods over KRW 150,000 subject to duties', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: '',
   },
   taiwan: {
@@ -410,7 +410,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Declare full value — customs checks declared vs. market value', 'Goods over TWD 2,000 may be subject to duties'],
+    rules: ['Declare full value — customs checks declared vs. market value', 'Goods over TWD 2,000 may be subject to duties', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   singapore: {
@@ -421,7 +421,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['All imports over SGD 400 subject to GST', 'Chewing gum and certain goods prohibited — check restricted items list'],
+    rules: ['All imports over SGD 400 subject to GST', 'Chewing gum and certain goods prohibited — check restricted items list', 'Japan Post: max 20 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   newzealand: {
@@ -432,7 +432,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Strict biosecurity — do not ship food, plants, or animal products', 'Goods over NZD 1,000 subject to customs duty and GST', 'Declare full value on all shipments'],
+    rules: ['Strict biosecurity — do not ship food, plants, or animal products', 'Goods over NZD 1,000 subject to customs duty and GST', 'Declare full value on all shipments', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   hongkong: {
@@ -443,7 +443,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['No import duty on most goods — one of the most open customs regimes', 'Full declared value required', 'Some items require permits — check restricted goods list for electronics/cosmetics'],
+    rules: ['No import duty on most goods — one of the most open customs regimes', 'Full declared value required', 'Some items require permits — check restricted goods list for electronics/cosmetics', 'Japan Post: max 20 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   malaysia: {
@@ -454,7 +454,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Declare full value on all shipments', 'Food items: halal certification required for import', 'Goods over MYR 500 subject to customs duty and SST'],
+    rules: ['Declare full value on all shipments', 'Food items: halal certification required for import', 'Goods over MYR 500 subject to customs duty and SST', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail only — no surface mail'],
     notes: '',
   },
   thailand: {
@@ -465,7 +465,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Cosmetics, supplements, and food items require Thai FDA approval to import', 'Declare full value — Thai customs compares declared vs. market value', 'Goods subject to customs duty; rate varies by HS code'],
+    rules: ['Cosmetics, supplements, and food items require Thai FDA approval to import', 'Declare full value — Thai customs compares declared vs. market value', 'Goods subject to customs duty; rate varies by HS code', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   vietnam: {
@@ -476,7 +476,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Detailed commercial invoice required for all shipments', 'Recipient tax ID (MST) required for B2B shipments', 'Cosmetics and health products require Ministry of Health import approval', 'Goods subject to import duty and VAT — rate varies by category'],
+    rules: ['Detailed commercial invoice required for all shipments', 'Recipient tax ID (MST) required for B2B shipments', 'Cosmetics and health products require Ministry of Health import approval', 'Goods subject to import duty and VAT — rate varies by category', 'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: '',
   },
   philippines: {
@@ -487,7 +487,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['De minimis threshold PHP 10,000 — goods above subject to customs duty and VAT', 'Food and regulated items require prior import clearance from relevant agencies', 'Declare full value — Bureau of Customs actively audits declared values'],
+    rules: ['De minimis threshold PHP 10,000 — goods above subject to customs duty and VAT', 'Food and regulated items require prior import clearance from relevant agencies', 'Declare full value — Bureau of Customs actively audits declared values', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: '',
   },
   indonesia: {
@@ -498,7 +498,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Recipient tax ID (NPWP) required for shipments over USD 75', 'Many product categories require import permits — verify before shipping', 'Strict labelling requirements for food, cosmetics, and electronics', 'Declare full value — customs scrutiny is high'],
+    rules: ['Recipient tax ID (NPWP) required for shipments over USD 75', 'Many product categories require import permits — verify before shipping', 'Strict labelling requirements for food, cosmetics, and electronics', 'Declare full value — customs scrutiny is high', 'Japan Post: max 20 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available'],
     notes: 'Indonesia customs is among the most complex in APAC. Confirm import permit requirements for the specific product category before shipping.',
   },
   india: {
@@ -509,7 +509,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Import duty applies to most goods — rate varies by HS code', 'Electronics, supplements, and cosmetics may require BIS or FSSAI import licence', 'Recipient PAN or IEC number required for commercial shipments', 'Declare full value — undervaluation is aggressively flagged by Indian customs'],
+    rules: ['Import duty applies to most goods — rate varies by HS code', 'Electronics, supplements, and cosmetics may require BIS or FSSAI import licence', 'Recipient PAN or IEC number required for commercial shipments', 'Declare full value — undervaluation is aggressively flagged by Indian customs', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'Indian customs compliance requirements are complex and product-category specific. Verify applicable import regulations with the carrier before booking.',
   },
   pakistan: {
@@ -520,7 +520,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'q',    note: 'Monitor — verify before booking.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: ['Commercial goods require import permit and customs clearance', 'Restricted product categories — verify eligibility before shipping', 'Declare full value on all shipments', 'Customs clearance can be slow — allow extra lead time'],
+    rules: ['Commercial goods require import permit and customs clearance', 'Restricted product categories — verify eligibility before shipping', 'Declare full value on all shipments', 'Customs clearance can be slow — allow extra lead time', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'FedEx and DHL are the most reliable options. Verify Japan Post and UPS acceptance before booking.',
   },
   bangladesh: {
@@ -531,7 +531,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'q',  note: 'Monitor — verify before booking.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['High import duty rates on many product categories', 'Commercial shipments require detailed commercial invoice and packing list', 'Some goods require import licence — verify before shipping', 'Declare full value on all shipments'],
+    rules: ['High import duty rates on many product categories', 'Commercial shipments require detailed commercial invoice and packing list', 'Some goods require import licence — verify before shipping', 'Declare full value on all shipments', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'DHL and FedEx are preferred carriers. Verify UPS acceptance before booking.',
   },
   apac: {
@@ -542,7 +542,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'q',    note: 'Monitoring — verify before booking.' },
       { name: 'DHL',        s: 'q',    note: 'Monitoring — verify before booking.' },
     ],
-    rules: ['Always verify JP acceptance per country before booking', 'Carrier service levels vary significantly across this region'],
+    rules: ['Always verify JP acceptance per country before booking', 'Carrier service levels vary significantly across this region', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'Status changes frequently. Check carrier advisory pages before booking.',
   },
   israel: {
@@ -558,6 +558,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill — charged at DHL facility processing',
       'FedEx: International Priority (IP) service only — standard and economy not accepted',
       'FedEx demand surcharge: JPY 485 per volumetric kg',
+      'Japan Post: max 20 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available',
     ],
     notes: 'DHL and FedEx available with surcharges from March 2026. FedEx limited to International Priority only. UPS suspended.',
   },
@@ -574,6 +575,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'FedEx: extreme delays expected — Dubai airport hub currently unavailable',
       'FedEx demand surcharge: JPY 226 per volumetric kg — avoid FedEx for time-sensitive shipments',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: 'DHL is the recommended carrier. FedEx technically available but experiencing extreme delays due to Dubai hub disruption. Japan Post and UPS suspended.',
   },
@@ -590,6 +592,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
       'FedEx demand surcharge: JPY 226 per volumetric kg',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: 'DHL recommended. FedEx available but extreme delays due to Dubai hub. Japan Post and UPS suspended.',
   },
@@ -606,6 +609,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
       'FedEx demand surcharge: JPY 226 per volumetric kg',
+      'Japan Post: max 20 kg · 3 m size limit (L+2W+2H) · airmail and surface mail available',
     ],
     notes: '',
   },
@@ -622,6 +626,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
       'FedEx demand surcharge: JPY 226 per volumetric kg',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: '',
   },
@@ -638,6 +643,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
       'FedEx demand surcharge: JPY 226 per volumetric kg',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: '',
   },
@@ -654,6 +660,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
       'FedEx demand surcharge: JPY 226 per volumetric kg',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: '',
   },
@@ -670,6 +677,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
       'FedEx demand surcharge: JPY 226 per volumetric kg',
+      'Japan Post: max 30 kg · 3 m size limit (L+2W+2H) · airmail only — no surface mail',
     ],
     notes: '',
   },
@@ -686,6 +694,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'FedEx: extreme delays — Dubai hub unavailable, avoid for urgent shipments',
       'FedEx demand surcharge: JPY 226 per volumetric kg',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: '',
   },
@@ -702,6 +711,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'DHL: JPY 5,000 surcharge + additional Restricted Destination Fee per waybill',
       'Confirm DHL restricted destination fee amount before booking',
       'FedEx: extreme delays — Dubai hub offline; demand surcharge JPY 226/vol. kg',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: 'DHL operates with an additional Restricted Destination Fee on top of the standard surcharge. Verify total fees with DHL before booking.',
   },
@@ -718,6 +728,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'FedEx: service unavailable — do not accept FedEx orders for Yemen',
       'DHL: JPY 5,000 surcharge + Restricted Destination Fee per waybill',
       'Confirm DHL acceptance and fee amount before creating shipment',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: 'FedEx unavailable. DHL available with restricted destination surcharge — confirm explicitly before booking.',
   },
@@ -734,6 +745,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'FedEx: service unavailable — do not accept FedEx orders for Syria',
       'DHL: JPY 5,000 fixed surcharge per waybill (effective March 2026)',
       'Verify DHL acceptance before booking',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: 'FedEx unavailable. DHL available with standard Middle East surcharge.',
   },
@@ -753,6 +765,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       'FedEx unavailable for Yemen and Syria — do not book',
       'UPS suspended across the region',
       'Japan Post suspended for most — verify per country before booking',
+      'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site',
     ],
     notes: 'DHL is the recommended carrier. Verify DHL destination acceptance before booking. FedEx available for some countries but unreliable due to Dubai hub outage.',
   },
@@ -764,7 +777,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok', note: 'Operational.' },
       { name: 'DHL',        s: 'ok', note: 'Operational.' },
     ],
-    rules: ['Goods over ZAR 500 subject to VAT; over ZAR 1,000 subject to customs duty', 'SARS clearance required for commercial shipments', 'Declare full value on all shipments', 'Some product categories require permits — verify before shipping'],
+    rules: ['Goods over ZAR 500 subject to VAT; over ZAR 1,000 subject to customs duty', 'SARS clearance required for commercial shipments', 'Declare full value on all shipments', 'Some product categories require permits — verify before shipping', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: '',
   },
   egypt: {
@@ -775,7 +788,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'ok',   note: 'Operational.' },
       { name: 'DHL',        s: 'ok',   note: 'Operational.' },
     ],
-    rules: ['Detailed commercial invoice required for all shipments', 'Egypt customs is strict — some categories require import licence', 'High duty rates on many product categories', 'Declare full value on all shipments'],
+    rules: ['Detailed commercial invoice required for all shipments', 'Egypt customs is strict — some categories require import licence', 'High duty rates on many product categories', 'Declare full value on all shipments', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'Japan Post may experience delays. Use courier for reliable delivery.',
   },
   russia: {
@@ -786,7 +799,7 @@ const INITIAL_DATA: Record<string, DestData> = {
       { name: 'UPS',        s: 'no',   note: 'Service suspended.' },
       { name: 'DHL',        s: 'no',   note: 'Service suspended.' },
     ],
-    rules: ['FedEx, UPS, DHL: all suspended — no exceptions', 'Japan Post: listed as operational on JP advisory — confirm export compliance and sanctions before accepting', 'Refund any orders where carrier cannot be confirmed'],
+    rules: ['FedEx, UPS, DHL: all suspended — no exceptions', 'Japan Post: listed as operational on JP advisory — confirm export compliance and sanctions before accepting', 'Refund any orders where carrier cannot be confirmed', 'Japan Post: size limit unconfirmed — assume 2 m max; verify weight and services at Japan Post site'],
     notes: 'FedEx, DHL, UPS remain suspended. Japan Post appears to have resumed service (confirmed on JP advisory Apr 2026) but export control and sanctions compliance must be verified before booking.',
   },
 };
