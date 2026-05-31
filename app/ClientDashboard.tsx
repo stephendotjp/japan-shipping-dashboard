@@ -1065,17 +1065,40 @@ function DestDetail({ dest, t, onCarrierStatus, onCarrierNote, onRuleChange, onA
 export default function Dashboard() {
   const [data, setData] = useState<Record<string, DestData>>(INITIAL_DATA);
   const skipSaveRef = useRef(true);
+  const kvTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('japan-shipping-data');
-      if (saved) setData({ ...INITIAL_DATA, ...JSON.parse(saved) });
-    } catch {}
+    async function load() {
+      try {
+        const res = await fetch('/api/dashboard');
+        if (res.ok) {
+          const saved = await res.json();
+          if (saved && Object.keys(saved).length > 0) {
+            setData({ ...INITIAL_DATA, ...saved });
+            return;
+          }
+        }
+      } catch {}
+      // Fall back to localStorage if KV is unavailable
+      try {
+        const saved = localStorage.getItem('japan-shipping-data');
+        if (saved) setData({ ...INITIAL_DATA, ...JSON.parse(saved) });
+      } catch {}
+    }
+    load();
   }, []);
 
   useEffect(() => {
     if (skipSaveRef.current) { skipSaveRef.current = false; return; }
     try { localStorage.setItem('japan-shipping-data', JSON.stringify(data)); } catch {}
+    if (kvTimerRef.current) clearTimeout(kvTimerRef.current);
+    kvTimerRef.current = setTimeout(() => {
+      fetch('/api/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).catch(() => {});
+    }, 2000);
   }, [data]);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>('en');
